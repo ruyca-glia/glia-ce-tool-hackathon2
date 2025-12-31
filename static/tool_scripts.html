@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Run Scripts - Internal Tools</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="/static/tool-page.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="back-link">← Back to Dashboard</a>
+            <span class="team-badge">Team Dashboard</span>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="tool-header">
+            <div class="tool-icon-large">⚡</div>
+            <div>
+                <h1>Run Scripts</h1>
+                <p>Execute predefined bash and Python scripts</p>
+            </div>
+        </div>
+
+        <div class="tool-layout">
+            <!-- Script Selection Panel -->
+            <section class="panel">
+                <h2>Select Script</h2>
+                
+                <form id="script-form" action="/tools/scripts/run" method="POST">
+                    <div class="form-group">
+                        <label for="script-select">Script</label>
+                        <select id="script-select" name="script" required>
+                            <option value="">Choose a script...</option>
+                            <optgroup label="Bash Scripts">
+                                <option value="cleanup_logs">cleanup_logs.sh - Clear old log files</option>
+                                <option value="health_check">health_check.sh - Run system health check</option>
+                                <option value="backup_db">backup_db.sh - Backup database</option>
+                            </optgroup>
+                            <optgroup label="Python Scripts">
+                                <option value="sync_data">sync_data.py - Sync external data</option>
+                                <option value="generate_report">generate_report.py - Generate weekly report</option>
+                                <option value="process_queue">process_queue.py - Process pending jobs</option>
+                            </optgroup>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="environment">Environment</label>
+                        <div class="radio-group">
+                            <label class="radio-option">
+                                <input type="radio" name="environment" value="staging" checked>
+                                <span>Staging</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="environment" value="production">
+                                <span>Production</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="args">Arguments (optional)</label>
+                        <input type="text" id="args" name="args" placeholder="--verbose --dry-run">
+                        <span class="form-hint">Space-separated arguments to pass to the script</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="notify" value="1">
+                            <span>Send notification when complete</span>
+                        </label>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            Run Script
+                        </button>
+                        <button type="reset" class="btn btn-secondary">
+                            Reset
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Output Panel -->
+            <section class="panel">
+                <h2>Output</h2>
+                <div class="output-container">
+                    <div class="output-header">
+                        <span class="output-status">Ready</span>
+                        <button class="btn btn-small" id="clear-output">Clear</button>
+                    </div>
+                    <pre class="output-console" id="output">Waiting for script execution...
+
+Select a script and click "Run Script" to begin.</pre>
+                </div>
+            </section>
+        </div>
+
+        <!-- Recent Executions -->
+        <section class="panel">
+            <h2>Recent Executions</h2>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Script</th>
+                        <th>Environment</th>
+                        <th>User</th>
+                        <th>Status</th>
+                        <th>Duration</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>health_check.sh</code></td>
+                        <td>staging</td>
+                        <td>alice</td>
+                        <td><span class="badge badge-success">Success</span></td>
+                        <td>2.3s</td>
+                        <td>2025-12-31 10:15:00</td>
+                    </tr>
+                    <tr>
+                        <td><code>sync_data.py</code></td>
+                        <td>production</td>
+                        <td>bob</td>
+                        <td><span class="badge badge-success">Success</span></td>
+                        <td>45.1s</td>
+                        <td>2025-12-31 09:30:00</td>
+                    </tr>
+                    <tr>
+                        <td><code>cleanup_logs.sh</code></td>
+                        <td>staging</td>
+                        <td>alice</td>
+                        <td><span class="badge badge-error">Failed</span></td>
+                        <td>0.8s</td>
+                        <td>2025-12-31 08:45:00</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>Internal Tools v1.0 · For authorized team members only</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glia Client Engineer Tools</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1>Client Engineering - Internal Dashboard</h1>
+            <span class="team-badge">Team Dashboard</span>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Status Section -->
+        <section class="status-section">
+            <h2>System Status</h2>
+            <div class="status-grid">
+                <div class="status-card">
+                    <span class="status-indicator status-ok"></span>
+                    <div class="status-info">
+                        <span class="status-label">Overall System Status Americas</span>
+                        <span class="status-value">Operational</span>
+                    </div>
+                </div>
+                <div class="status-card">
+                    <span class="status-indicator status-ok"></span>
+                    <div class="status-info">
+                        <span class="status-label">Overall System Status EU</span>
+                        <span class="status-value">Operational</span>
+                    </div>
+                </div>
+                <div class="status-card">
+                    <span class="status-indicator status-warning"></span>
+                    <div class="status-info">
+                        <span class="status-label">Background Jobs</span>
+                        <span class="status-value">Degraded</span>
+                    </div>
+                </div>
+                <div class="status-card">
+                    <span class="status-indicator status-ok"></span>
+                    <div class="status-info">
+                        <span class="status-label">External APIs</span>
+                        <span class="status-value">Operational</span>
+                    </div>
+                </div>
+            </div>
+            <p class="status-timestamp">Last updated: <span id="last-update">2025-12-31 10:30:00 UTC</span></p>
+        </section>
+
+        <!-- Tools Section -->
+        <section class="tools-section">
+            <h2>Available Tools</h2>
+            <div class="tools-grid">
+                <a href="/tools/deploy" class="tool-card">
+                    <div class="tool-icon">🚀</div>
+                    <div class="tool-info">
+                        <h3>Onboarding tools</h3>
+                        <p>Live troubleshoot common Glia issues, with real websites that replicate the problems.</p>
+                    </div>
+                    <span class="tool-arrow">→</span>
+                </a>
+
+                <a href="/tools/logs" class="tool-card">
+                    <div class="tool-icon">📋</div>
+                    <div class="tool-info">
+                        <h3>Log Viewer</h3>
+                        <p>View and search application logs in real-time</p>
+                    </div>
+                    <span class="tool-arrow">→</span>
+                </a>
+
+                <a href="/tools/database" class="tool-card">
+                    <div class="tool-icon">🗄️</div>
+                    <div class="tool-info">
+                        <h3>Database Tools</h3>
+                        <p>Run migrations, backups, and maintenance tasks</p>
+                    </div>
+                    <span class="tool-arrow">→</span>
+                </a>
+
+                <a href="/tools/scripts" class="tool-card">
+                    <div class="tool-icon">⚡</div>
+                    <div class="tool-info">
+                        <h3>Run Scripts</h3>
+                        <p>Execute predefined bash and Python scripts</p>
+                    </div>
+                    <span class="tool-arrow">→</span>
+                </a>
+
+                <a href="/tools/users" class="tool-card">
+                    <div class="tool-icon">👥</div>
+                    <div class="tool-info">
+                        <h3>User Management</h3>
+                        <p>Manage team accounts and permissions</p>
+                    </div>
+                    <span class="tool-arrow">→</span>
+                </a>
+
+                <a href="/tools/reports" class="tool-card">
+                    <div class="tool-icon">📊</div>
+                    <div class="tool-info">
+                        <h3>Generate Reports</h3>
+                        <p>Create and export system reports</p>
+                    </div>
+                    <span class="tool-arrow">→</span>
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>Internal Tools v1.0 · For authorized team members only</p>
+    </footer>
+</body>
+</html>
