@@ -1,20 +1,145 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Glia Client Engineer Tools</title>
     <link rel="stylesheet" href="/static/css/styles.css">
+    <script async src="https://api.glia.com/salemove_integration.js"></script>
+    <script type="text/javascript" src="//libs.glia.com/axon.js"></script>
     <style>
-        /* ===========================================
-        Internal Tools Dashboard - Stylesheet
-        Primary: Purple (81, 15, 164)
-        Complementary: White
-        Design: Minimal, functional, low maintenance
-        =========================================== */
+        /*Tickets Action Table*/
+        body {
+            padding: 20px;
+            font-family: sans-serif;
+        }
 
-        /* Reset and Base */
-        *, *::before, *::after {
+        .container {
+            max-width: 1024px;
+            margin: auto;
+        }
+
+        .user-header {
+            text-align: right;
+            color: #555;
+            margin-bottom: 2em;
+        }
+
+        .purple-button {
+            background-color: #6a0dad;
+            color: white;
+        }
+
+        /* Style for the disabled trigger button */
+        .purple-button:disabled {
+            background-color: #cccccc;
+            color: #666666;
+            cursor: not-allowed;
+        }
+
+        .details-container {
+            background-color: #f7f7f7;
+            padding: 15px;
+            border: 1px solid #ddd;
+            margin-top: -1px;
+            /* Aligns with table border */
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 10px;
+        }
+
+        .details-grid dt {
+            font-weight: bold;
+        }
+
+        /* New container for the checkbox */
+        .approval-container {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e8e8e8;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .approval-container label {
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .approval-container input {
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        .trigger-button-container {
+            margin-top: 20px;
+        }
+
+        .trigger-button {
+            width: 100%;
+            padding: 12px;
+            font-size: 1.1em;
+        }
+
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 4px solid #6a0dad;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .logs-container {
+            margin-top: 20px;
+            background-color: #2d2d2d;
+            color: #00ff41;
+            padding: 15px;
+            font-family: 'Courier New', Courier, monospace;
+            border-radius: 5px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            background-color: #555;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar-inner {
+            width: 0%;
+            height: 10px;
+            background-color: #00ff41;
+            border-radius: 5px;
+            transition: width 0.5s ease-in-out;
+        }
+
+        .log-line {
+            margin-bottom: 5px;
+        }
+
+
+        /* Base Main Manifest */
+        *,
+        *::before,
+        *::after {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
@@ -250,18 +375,17 @@
                 gap: 0.5rem;
                 text-align: center;
             }
-            
+
             .tools-grid {
                 grid-template-columns: 1fr;
             }
-            
+
             .status-grid {
                 grid-template-columns: 1fr;
             }
         }
 
         /* ===========================================
-        Tool Page Specific Styles
         Additional styles for individual tool pages
         =========================================== */
 
@@ -576,10 +700,12 @@
             }
         }
 
-        .hidden { display: none; }
-
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
+
 <body>
     <!-- Main View: Main View content -->
     <div id="main-view">
@@ -640,16 +766,16 @@
                         <span class="tool-arrow">→</span>
                     </a>
 
-                    <a href="/tools/logs" class="tool-card">
+                    <!-- <a href="/tools/logs" class="tool-card">
                         <div class="tool-icon">📋</div>
                         <div class="tool-info">
                             <h3>Log Viewer</h3>
                             <p>View and search application logs in real-time</p>
                         </div>
                         <span class="tool-arrow">→</span>
-                    </a>
+                    </a> -->
 
-                    <a href="#" onclick="showView('onboarding-main-view', event)" class="tool-card">
+                    <a href="#" onclick="showView('automation-main-view', event)" class="tool-card">
                         <div class="tool-icon">🤖</div>
                         <div class="tool-info">
                             <h3>Ticket Automation</h3>
@@ -667,23 +793,23 @@
                         <span class="tool-arrow">→</span>
                     </a>
 
-                    <a href="/tools/users" class="tool-card">
+                    <!-- <a href="/tools/users" class="tool-card">
                         <div class="tool-icon">👥</div>
                         <div class="tool-info">
                             <h3>User Management</h3>
                             <p>Manage team accounts and permissions</p>
                         </div>
                         <span class="tool-arrow">→</span>
-                    </a>
+                    </a> -->
 
-                    <a href="/tools/reports" class="tool-card">
+                    <!-- <a href="/tools/reports" class="tool-card">
                         <div class="tool-icon">📊</div>
                         <div class="tool-info">
                             <h3>Generate Reports</h3>
                             <p>Create and export system reports</p>
                         </div>
                         <span class="tool-arrow">→</span>
-                    </a>
+                    </a> -->
                 </div>
             </section>
         </main>
@@ -693,7 +819,7 @@
         </footer>
     </div>
 
-    <!-- Main View: Main View content -->
+    <!-- Onboarding View: Main View Onboarding -->
     <div id="onboarding-main-view" class="hidden">
         <header class="header">
             <div class="header-content">
@@ -715,7 +841,7 @@
                 <!-- Script Selection Panel -->
                 <section class="panel">
                     <h2>Select Script</h2>
-                    
+
                     <form id="script-form" action="/tools/scripts/run" method="POST">
                         <div class="form-group">
                             <label for="script-select">Script</label>
@@ -780,7 +906,8 @@
                             <span class="output-status">Ready</span>
                             <button class="btn btn-small" id="clear-output">Clear</button>
                         </div>
-                        <pre class="output-console" id="output">Waiting for script execution... Select a script and click "Run Script" to begin.</pre>
+                        <pre class="output-console"
+                            id="output">Waiting for script execution... Select a script and click "Run Script" to begin.</pre>
                     </div>
                 </section>
             </div>
@@ -799,34 +926,67 @@
                             <th>Timestamp</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td><code>health_check.sh</code></td>
-                            <td>staging</td>
-                            <td>alice</td>
-                            <td><span class="badge badge-success">Success</span></td>
-                            <td>2.3s</td>
-                            <td>2025-12-31 10:15:00</td>
-                        </tr>
-                        <tr>
-                            <td><code>sync_data.py</code></td>
-                            <td>production</td>
-                            <td>bob</td>
-                            <td><span class="badge badge-success">Success</span></td>
-                            <td>45.1s</td>
-                            <td>2025-12-31 09:30:00</td>
-                        </tr>
-                        <tr>
-                            <td><code>cleanup_logs.sh</code></td>
-                            <td>staging</td>
-                            <td>alice</td>
-                            <td><span class="badge badge-error">Failed</span></td>
-                            <td>0.8s</td>
-                            <td>2025-12-31 08:45:00</td>
-                        </tr>
-                    </tbody>
+                    <tbody">
+                        </tbody>
                 </table>
             </section>
+        </main>
+
+        <footer class="footer">
+            <p>Internal Tools v1.0 · For authorized team members only</p>
+        </footer>
+    </div>
+
+    <!-- Ticket Automation View: Main View Ticket Automation -->
+    <div id="automation-main-view" class="hidden">
+        <header class="header">
+            <div class="header-content">
+                <a href="#" onclick="showView('main-view', event)" class="back-link">← Back to Dashboard</a>
+                <span class="team-badge">Team Dashboard</span>
+            </div>
+        </header>
+
+        <main class="container">
+            <div class="tool-header">
+                <div class="tool-icon-large">🤖</div>
+                <div>
+                    <h1>Ticket Automation</h1>
+                    <p>Automated request execution</p>
+                </div>
+            </div>
+
+            <div class="tool-layout">
+                <!-- Script Selection Panel -->
+                <section class="panel">
+                    <h2>Requests to complete</h2>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Ticket</th>
+                                <th>Priority</th>
+                                <th>Request Type</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ticketTableBody">
+                        </tbody>
+                    </table>
+                </section>
+
+                <!-- Output Panel -->
+                <section class="panel">
+                    <h2>Output</h2>
+                    <div class="output-container">
+                        <div class="output-header">
+                            <span class="output-status">Ready</span>
+                            <button class="btn btn-small" id="clear-output">Clear</button>
+                        </div>
+                        <pre class="output-console"
+                            id="output">Waiting for script execution... Select a script and click "Run Script" to begin.</pre>
+                    </div>
+                </section>
+            </div>
         </main>
 
         <footer class="footer">
@@ -842,10 +1002,211 @@
             // 1. Ocultar todas las vistas
             document.getElementById('main-view').classList.add('hidden');
             document.getElementById('onboarding-main-view').classList.add('hidden');
-            
+            document.getElementById('automation-main-view').classList.add('hidden');
+
             // 2. Mostrar la vista deseada
             document.getElementById(idVista).classList.remove('hidden');
         }
+
+
+        //Logica para tabla de Tickets - Actions
+        // --- 1. MOCK DATA & CONFIG ---
+        const MOCK_TICKETS = 3;
+        const PRIORITIES = ["High", "Medium", "Low"];
+        const LOG_MESSAGES = [
+            "Verifying Jira token... Success",
+            "Fetching provided settings... Success",
+            "Accessing AWS Secrets Vault... Success",
+            "Accessing GVA Chat Adapter... Success",
+            "Updating API key and Secret... Success",
+            "Accessing GVA Core... Success",
+            "Fetching config for glia-phone-gva-uat .... Success",
+            "Updating Site ID and Human queue.... Success",
+            "Refreshing Glia Support Operator API Key... Success",
+            "Posting comment on Jira with success comment... Success",
+            "Resolving Jira Ticket.... Success",
+            "All complete!"
+        ];
+
+        // --- 2. INITIALIZATION ---
+        document.addEventListener("DOMContentLoaded", () => {
+            populateTicketTable();
+            document.getElementById("ticketTableBody").addEventListener('click', handleTableClick);
+        });
+
+        // --- 3. CORE FUNCTIONS ---
+
+        /** Populates the main table with mock ticket data */
+        function populateTicketTable() {
+            const tableBody = document.getElementById("ticketTableBody");
+            tableBody.innerHTML = ""; // Clear existing
+            for (let i = 0; i < MOCK_TICKETS; i++) {
+                const ticketKey = `CE-${7000 + Math.floor(Math.random() * 1000)}`;
+                const priority = PRIORITIES[Math.floor(Math.random() * PRIORITIES.length)];
+                const jiraLink = `https://glia.atlassian.net/browse/${ticketKey}`;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+            <td>${ticketKey}</td>
+            <td>${priority}</td>
+            <td>Update GVA API Key and Secret</td>
+            <td><a href="${jiraLink}" target="_blank">${ticketKey}</a></td>
+            <td><button class="pure-button purple-button go-button" data-ticket-key="${ticketKey}">GO!</button></td>
+            `;
+                tableBody.appendChild(row);
+            }
+        }
+
+        /** Handles all clicks inside the table body */
+        function handleTableClick(event) {
+            const target = event.target;
+            if (target.classList.contains('go-button')) {
+                handleGoClick(target);
+            } else if (target.classList.contains('trigger-button')) {
+                handleTriggerClick(target);
+            } else if (target.classList.contains('approval-checkbox')) { // <-- ADDED
+                handleApprovalCheck(target);
+            }
+        }
+
+        /** Shows the collapsible details panel when "GO!" is clicked */
+        function handleGoClick(button) {
+            getFunctionResponse();
+            clearActivePanels();
+
+            const ticketRow = button.closest('tr');
+            const collapsibleRow = document.createElement('tr');
+            collapsibleRow.className = 'collapsible-row';
+            // <-- MODIFIED: Added checkbox and set trigger button to 'disabled'
+            collapsibleRow.innerHTML = `
+            <td colspan="5">
+            <div class="details-container">
+                <dl class="details-grid">
+                <dt>Summary</dt><dd>Generate API Key + Secret, Add Handover Queue and Site ID for CLIENT</dd>
+                <dt>Client</dt><dd>Glia's CLIENT NAME</dd>
+                <dt>Bot Code</dt><dd>glia-phone-gva</dd>
+                <dt>Environment</dt><dd>uat</dd>
+                <dt>Site ID</dt><dd>Carlos Gomez Staging - d42c5832-2e79-4a7e-bfb5-f006e1a17676</dd>
+                <dt>Queue ID</dt><dd>f3592f2c-fb17-4f21-9cd5-8c8648e3a58c</dd>
+                </dl>
+                <div class="approval-container">
+                <label>
+                    <input type="checkbox" class="approval-checkbox"> Approve request
+                </label>
+                </div>
+                <div class="trigger-button-container">
+                <button class="pure-button purple-button trigger-button" disabled>Trigger</button>
+                </div>
+            </div>
+            <div class="logs-panel"></div>
+            </td>
+        `;
+            ticketRow.parentNode.insertBefore(collapsibleRow, ticketRow.nextSibling);
+        }
+
+        /** Starts the logging simulation when "Trigger" is clicked */
+        function handleTriggerClick(button) {
+            button.disabled = true;
+            button.innerHTML = 'Processing... <div class="loader"></div>';
+
+            const logsPanel = button.closest('td').querySelector('.logs-panel');
+            logsPanel.innerHTML = `
+            <div class="logs-container">
+            <div class="progress-bar"><div class="progress-bar-inner"></div></div>
+            <div class="log-lines"></div>
+            </div>
+        `;
+
+            const logLinesContainer = logsPanel.querySelector('.log-lines');
+            const progressBarInner = logsPanel.querySelector('.progress-bar-inner');
+            let logIndex = 0;
+
+            const logInterval = setInterval(() => {
+                if (logIndex < LOG_MESSAGES.length) {
+                    const p = document.createElement('p');
+                    p.className = 'log-line';
+                    p.textContent = LOG_MESSAGES[logIndex];
+                    logLinesContainer.appendChild(p);
+
+                    const progress = ((logIndex + 1) / LOG_MESSAGES.length) * 100;
+                    progressBarInner.style.width = `${progress}%`;
+
+                    logIndex++;
+                } else {
+                    clearInterval(logInterval);
+                    // Don't re-enable the button after one run
+                }
+            }, 500);
+        }
+
+        /** NEW: Enables or disables the Trigger button based on the checkbox state */
+        function handleApprovalCheck(checkbox) {
+            const container = checkbox.closest('.details-container');
+            const triggerButton = container.querySelector('.trigger-button');
+            triggerButton.disabled = !checkbox.checked;
+        }
+
+        /** Finds and removes any open details panel to keep the UI clean */
+        function clearActivePanels() {
+            const existingPanel = document.querySelector('.collapsible-row');
+            if (existingPanel) {
+                existingPanel.remove();
+            }
+        }
+
+        // Get Info from Jira - Work in Progress 
+        const functionUrl = 'https://api.glia.com/integrations/709f8159-7814-432c-b5ac-154aef00f456/endpoint';
+
+        // Calling my function
+        async function getFunctionResponse() {
+            const glia = await window.getGliaApi({ version: 'v1' });
+            const headers = await glia.getRequestHeaders();
+            headers['Content-Type'] = 'application/json';
+
+            const response = await fetch(functionUrl, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({})
+            });
+
+            const resultado = await response.json();
+
+            if (resultado.error) {
+                console.log(resultado.Error);
+            } else {
+                console.log(JSON.stringify(resultado, null, 2));
+            }
+        }
+
+        //     try {
+
+        //         const glia = await window.getGliaApi({ version: 'v1' });
+        //         const headers = await glia.getRequestHeaders();
+        //         headers['Content-Type'] = 'application/json';
+
+        //         const response = await fetch(functionUrl, {
+        //             method: 'POST',
+        //             headers: headers,
+        //             body: JSON.stringify({})
+        //         });
+
+        //         const resultado = await response.json();
+
+        //         if (resultado.error) {
+        //             console.log(resultado.Error);
+        //         } else {
+        //             if (consoleOutput) consoleOutput.innerText = JSON.stringify(resultado, null, 2);
+        //         }
+
+        //     } catch (err) {
+        //         console.error("Error en la ejecución:", err);
+        //         if (statusDiv) statusDiv.innerText = "Critical Error: Check Console";
+        //     }
+        // }
+
+        // Llamar a la función cuando cargue el applet o al hacer click en un botón
+        // obtenerTicketsJira(); 
     </script>
 </body>
+
 </html>
