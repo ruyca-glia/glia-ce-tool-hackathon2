@@ -1,33 +1,57 @@
 // /static/js/client-app.js
 
-const INVOKE_URL = 'https://api.glia.com/integrations/c8ee55e8-eebb-4934-bf1f-17fbdcfa69b2/endpoint';
-const ACCESS_TOKEN = 'eyJhbGciOiJFUzI1NiIsImtpZCI6IjU3YjVmYTFjLTBhMzgtNDFkOS1hYWNiLWUyYzhmZmQxNTQyOCIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X2lkIjoiYTA0ZDRmNzYtN2E5Mi00OGE0LTk5MDUtNzFiOTk4Mjg2YTlhIiwiYXV0aF9zY2hlbWEiOiJhcGlfdG9rZW4iLCJleHAiOjE3Njk2MjkxOTYsImlhdCI6MTc2OTYyNTU5NiwiaXNzIjoiU2FsZU1vdmUgT3BlcmF0b3IgQXV0aCIsInJvbGVzIjpbeyJvcGVyYXRvcl9pZCI6IjgwYzcyMGJiLWQ4NWQtNDZkNy04NDk0LTdkM2E0MzQ1OWRhMyIsInR5cGUiOiJvcGVyYXRvciJ9LHsiZW5hYmxlX3BvbGljeV9hdXRob3JpemF0aW9uIjp0cnVlLCJyb2xlIjoic3VwZXJfbWFuYWdlciIsInNpdGVfaWQiOiI0MmE4ZjEyNC1mNjgxLTQ2NzMtYmUzZC05YzNmMWQzNDliMWEiLCJ0eXBlIjoic2l0ZV9vcGVyYXRvciJ9XSwic3ViIjoib3BlcmF0b3I6ODBjNzIwYmItZDg1ZC00NmQ3LTg0OTQtN2QzYTQzNDU5ZGEzIn0.eme095XX3ghRNhfjP3TehkZFw_-iOi1RngYaBjRvy57rL7mEhneNC59jhrv1NmnQBEYNGWnwUCcoqBh5NX3e5Q'; // The one with functions:invoke permission
+// 1. Define your Function URL 
+const functionURL = 'https://api.glia.com/integrations/c8ee55e8-eebb-4934-bf1f-17fbdcfa69b2/endpoint';
 
-document.getElementById('runFunction').addEventListener('click', async () => {
-    console.log('Button clicked! Invoking Glia Function...');
+// 2. Initialize the Glia Applet API
+// This waits for the Glia environment to be ready
+window.getGliaApi({ version: 'v1' }).then(glia => {
+    
+    console.log('Glia API Initialized'); // Check console for this!
 
-    try {
-        const response = await fetch(INVOKE_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${ACCESS_TOKEN}`
-            },
-            body: JSON.stringify({
-                payload: { action: 'button_click' }
-            })
-        });
+    const button = document.getElementById('runFunction');
+    const statusMsg = document.createElement('div'); // To show status on screen
+    button.parentNode.appendChild(statusMsg);
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+    // 3. Attach the click listener INSIDE the Glia promise
+    button.addEventListener('click', async () => {
+        console.log('Button clicked. Fetching headers...');
+        statusMsg.innerText = 'Running...';
+
+        try {
+            // A: Get the secure headers from Glia (Magic step!)
+            const headers = await glia.getRequestHeaders();
+            headers['Content-Type'] = 'application/json';
+
+            // B: Call your Glia Function
+            const response = await fetch(functionURL, {
+                method: 'POST',
+                headers: headers, // Use the auto-generated headers
+                body: JSON.stringify({ 
+                    payload: { action: 'manual_button_click' } 
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Function failed: ${response.status}`);
+            }
+
+            // C: Handle the result
+            const data = await response.json();
+            console.log('Function Response:', data);
+            
+            statusMsg.innerText = 'Success! Check Console.';
+            statusMsg.style.color = 'green';
+
+        } catch (error) {
+            console.error('Error invoking function:', error);
+            statusMsg.innerText = 'Error: ' + error.message;
+            statusMsg.style.color = 'red';
         }
+    });
 
-        const data = await response.json();
-        console.log('Success! Glia Function says:', data);
-        alert('Glia Function Invoked! Check console for operator data.');
-
-    } catch (error) {
-        console.error('Failed to invoke function:', error);
-        alert('Error: ' + error.message);
-    }
+}).catch(error => {
+    // This catches if window.getGliaApi is missing (e.g., running locally)
+    console.error('Glia API failed to load. Are you testing locally?', error);
+    alert('Glia API not found. If you are running this locally, it will not work without a mock.');
 });
