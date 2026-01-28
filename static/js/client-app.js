@@ -13,6 +13,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const form = document.getElementById('script-form');
     const outputConsole = document.getElementById('output');
 
+
+    console.log("Event listener loaded");
     // --- STEP 1: Confirm Selection ---
     confirmBtn.addEventListener('click', () => {
         const selectedScript = scriptSelect.value;
@@ -29,6 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Logic for "client_offboarding"
         if (selectedScript === 'client_offboarding') {
+            console.log("if condition TRUE");
             dynamicContainer.style.display = 'block';
             
             // Create Label
