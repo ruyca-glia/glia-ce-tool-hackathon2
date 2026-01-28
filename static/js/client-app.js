@@ -1,65 +1,98 @@
 // /static/js/client-app.js
 
-// 1. Configuration
-const functionURL = 'https://api.glia.com/integrations/c8ee55e8-eebb-4934-bf1f-17fbdcfa69b2/endpoint';
+const functionURL = 'https://api.glia.com/integrations/d81f89fb-4fac-4416-9c7f-891342f4ac9b/endpoint';
 
-// 2. Wait for the DOM to be ready (Standard practice)
 document.addEventListener("DOMContentLoaded", () => {
+    const scriptSelect = document.getElementById('script-select');
+    const form = document.getElementById('script-form');
+    const outputConsole = document.getElementById('output');
     
-    console.log("DOM Loaded. wiring up button...");
-    const button = document.getElementById('runFunction');
-    
-    // Create a status message area so we don't have to rely only on console
-    const statusMsg = document.createElement('div');
-    statusMsg.style.marginTop = '10px';
-    button.parentNode.appendChild(statusMsg);
+    // Container for dynamic inputs
+    const dynamicInputContainer = document.createElement('div');
+    dynamicInputContainer.className = "form-group";
+    dynamicInputContainer.id = "dynamic-inputs";
+    // Insert it after the script selector dropdown
+    scriptSelect.closest('.form-group').after(dynamicInputContainer);
 
-    // 3. Attach the listener IMMEDIATELY
-    button.addEventListener('click', async () => {
-        console.log('Button clicked. Attempting to access Glia API...');
-        statusMsg.innerText = 'Initializing Glia connection...';
-        statusMsg.style.color = 'blue';
+    // --- A. Handle Dropdown Change ---
+    scriptSelect.addEventListener('change', (e) => {
+        // Clear previous dynamic inputs
+        dynamicInputContainer.innerHTML = '';
+        
+        if (e.target.value === 'client_offboarding') {
+            // Inject Site ID Input
+            const label = document.createElement('label');
+            label.innerText = "Target Site ID";
+            label.setAttribute('for', 'site_id');
+            
+            const input = document.createElement('input');
+            input.type = "text";
+            input.id = "site_id";
+            input.name = "site_id";
+            input.placeholder = "e.g., 11111111-2222-3333-4444-555555555555";
+            input.required = true; // Make it mandatory
+            
+            dynamicInputContainer.appendChild(label);
+            dynamicInputContainer.appendChild(input);
+        }
+    });
+
+    // --- B. Handle Form Submission ---
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault(); // Stop standard HTML form submit
+        
+        const selectedScript = scriptSelect.value;
+        if (!selectedScript) return;
+
+        logOutput(`Starting execution for: ${selectedScript}...`);
 
         try {
-            // Check if Glia API is actually available in the window
-            if (!window.getGliaApi) {
-                throw new Error("Glia API not found. (Are you running locally?)");
+            // 1. Gather Data
+            let payload = {
+                action: selectedScript,
+                args: document.getElementById('args').value
+            };
+
+            // If we are offboarding, grab the Site ID
+            if (selectedScript === 'client_offboarding') {
+                const siteId = document.getElementById('site_id').value;
+                if (!siteId) throw new Error("Site ID is required for this script.");
+                payload.site_id = siteId;
             }
 
-            // A: Initialize Glia API only when needed (Lazy Load)
+            // 2. Initialize Glia (Lazy Load)
+            if (!window.getGliaApi) throw new Error("Glia API not found.");
+            
+            logOutput("Initializing Glia API...");
             const glia = await window.getGliaApi({ version: 'v1' });
             
-            // B: Get Secure Headers
-            statusMsg.innerText = 'Fetching secure headers...';
+            logOutput("Fetching secure headers...");
             const headers = await glia.getRequestHeaders();
             headers['Content-Type'] = 'application/json';
 
-            // C: Call Middleware Function
-            statusMsg.innerText = 'Sending request to Middleware...';
+            // 3. Call Middleware
+            logOutput("Sending request to Middleware...");
             const response = await fetch(functionURL, {
                 method: 'POST',
                 headers: headers,
-                body: JSON.stringify({ 
-                    payload: { action: 'manual_button_click' } 
-                })
+                body: JSON.stringify(payload)
             });
 
-            if (!response.ok) {
-                throw new Error(`Server responded with ${response.status}`);
-            }
+            if (!response.ok) throw new Error(`Server Error: ${response.status}`);
 
-            // D: Handle Success
             const data = await response.json();
-            console.log('Middleware Response:', data);
             
-            statusMsg.innerText = 'Success! Data received.';
-            statusMsg.style.color = 'green';
+            // 4. Pretty Print Result
+            logOutput("SUCCESS:\n" + JSON.stringify(data, null, 2));
 
         } catch (error) {
-            // This will now catch both "Glia missing" AND "Fetch failed"
-            console.error('Process Failed:', error);
-            statusMsg.innerText = error.message;
-            statusMsg.style.color = 'red';
+            console.error(error);
+            logOutput(`ERROR: ${error.message}`);
         }
     });
+
+    function logOutput(msg) {
+        // Append text to the existing console output
+        outputConsole.innerText = msg;
+    }
 });
