@@ -22,7 +22,7 @@
             <div class="tool-icon-large">⚡</div>
             <div>
                 <h1>Run Scripts</h1>
-                <p>Execute predefined bash and Python scripts</p>
+                <p>Scripts do not solve tickets - but they help! This is a compilation of scripts that can help in resolving CE tickets faster. </p>
             </div>
         </div>
 
@@ -30,11 +30,11 @@
             <!-- Script Selection Panel -->
             <section class="panel">
                 <h2>Select Script</h2>
-                <p>Scripts do not solve tickets - but they help!</p>
-                <form id="script-form" action="/tools/scripts/run" method="POST">
-                    <div class="form-group">
-                        <label for="script-select">Script</label>
-                        <select id="script-select" name="script" required>
+            <form id="script-form" action="#" method="POST">
+                <div class="form-group">
+                    <label for="script-select">Script</label>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <select id="script-select" name="script" required style="flex-grow: 1;">
                             <option value="">Choose a script...</option>
                             <optgroup label="Available for use">
                                 <option value="client_offboarding">client_offboarding - Disable non super-managers</option>
@@ -42,34 +42,32 @@
                             <optgroup label="Coming soon">
                                 <option value="client_onboarding">client_onboarding - Onboard faster!</option>
                                 <option value="site_cloning">site_cloning - Clone faster to production!</option>
-                                <option value="your_idea_here">Contact MX CEs if you have an idea!</option>
+                                <option value="NA">Contact the MX CE team if you have another script idea!</option>
                             </optgroup>
                         </select>
-                    </div>
-
-
-                    <div class="form-group">
-                        <label for="args">Arguments (optional)</label>
-                        <input type="text" id="args" name="args" placeholder="--verbose --dry-run">
-                        <span class="form-hint">Space-separated arguments to pass to the script</span>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="checkbox-option">
-                            <input type="checkbox" name="notify" value="1">
-                            <span>Send notification when complete</span>
-                        </label>
-                    </div>
-
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">
-                            Run Script
-                        </button>
-                        <button type="reset" class="btn btn-secondary">
-                            Reset
+                        <button type="button" id="confirm-btn" class="btn btn-secondary" style="white-space: nowrap;">
+                            Confirm Selection
                         </button>
                     </div>
-                </form>
+                </div>
+
+                <div id="dynamic-fields" class="form-group" style="margin-top: 15px; border-left: 3px solid #6c5ce7; padding-left: 10px; display: none;">
+                    </div>
+
+                <div class="form-group">
+                    <label for="args">Arguments (optional)</label>
+                    <input type="text" id="args" name="args" placeholder="--verbose --dry-run">
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="run-btn" disabled>
+                        Run Script
+                    </button>
+                    <button type="reset" class="btn btn-secondary" id="reset-btn">
+                        Reset
+                    </button>
+                </div>
+            </form>
             </section>
 
             <!-- Output Panel -->

@@ -19,59 +19,62 @@ async function onInvoke(request, env) {
     const action = body.action || body.payload?.action;
     const siteId = body.site_id || body.payload?.site_id;
     if (action !== "client_offboarding") {
-      return Response.json({ message: "Action not recognized", action });
+      return Response.json({ message: "Unknown action. Ignoring." });
     }
     if (!siteId) {
-      return Response.json({ error: "Missing site_id parameter" }, { status: 400 });
+      return Response.json({ error: "Missing required 'site_id'" }, { status: 400 });
     }
-    const query = new URLSearchParams({
+    console.log(`Processing offboarding for Site: ${siteId}`);
+    const params = new URLSearchParams({
       site_id: siteId,
       include_support: "false",
       view: "full"
-      // Critical to see roles/assignments
+      // Required to see roles
     });
-    const getUrl = `https://api.glia.com/operators?${query.toString()}`;
-    const getResp = await fetch(getUrl, {
+    const listResp = await fetch(`https://api.glia.com/operators?${params}`, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${TOKEN}`,
         "Accept": "application/vnd.salemove.v1+json"
       }
     });
-    if (!getResp.ok) {
-      return Response.json({ error: "Failed to fetch operators", status: getResp.status });
+    if (!listResp.ok) {
+      return Response.json({ error: "Glia API Error (List)", status: listResp.status });
     }
-    const allOperators = await getResp.json();
-    const targets = allOperators.filter((op) => !isSuperManager(op));
-    const results = {
-      total_found: allOperators.length,
-      targets_count: targets.length,
-      disabled_users: [],
-      errors: []
-    };
+    const allOps = await listResp.json();
+    const targets = allOps.filter((op) => !isSuperManager(op));
+    const kept = allOps.filter((op) => isSuperManager(op));
+    const results = [];
+    const errors = [];
     for (const op of targets) {
-      const deleteUrl = `https://api.glia.com/operators/${op.id}`;
-      const delResp = await fetch(deleteUrl, {
+      const delResp = await fetch(`https://api.glia.com/operators/${op.id}`, {
         method: "DELETE",
-        // This triggers the disable
+        // API: This disables the user
         headers: {
           "Authorization": `Bearer ${TOKEN}`,
           "Accept": "application/json"
         }
       });
       if (delResp.ok) {
-        results.disabled_users.push({ id: op.id, email: op.email, name: op.name });
+        results.push(op.email);
       } else {
-        results.errors.push({ id: op.id, status: delResp.status });
+        errors.push({ email: op.email, code: delResp.status });
       }
     }
     return Response.json({
       status: "Success",
-      message: `Disabled ${results.disabled_users.length} users.`,
-      details: results
+      message: "Script execution finished.",
+      report: {
+        site_id: siteId,
+        total_users_scanned: allOps.length,
+        super_managers_preserved: kept.length,
+        users_disabled: results.length,
+        disabled_list: results,
+        failures: errors
+      }
     });
-  } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+  } catch (err) {
+    return Response.json({ error: err.message }, { status: 500 });
   }
 }
 export {

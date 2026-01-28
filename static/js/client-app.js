@@ -2,97 +2,132 @@
 
 const functionURL = 'https://api.glia.com/integrations/d81f89fb-4fac-4416-9c7f-891342f4ac9b/endpoint';
 
+
 document.addEventListener("DOMContentLoaded", () => {
+    // UI References
+    const confirmBtn = document.getElementById('confirm-btn');
+    const runBtn = document.getElementById('run-btn');
+    const resetBtn = document.getElementById('reset-btn');
     const scriptSelect = document.getElementById('script-select');
+    const dynamicContainer = document.getElementById('dynamic-fields');
     const form = document.getElementById('script-form');
     const outputConsole = document.getElementById('output');
-    
-    // Container for dynamic inputs
-    const dynamicInputContainer = document.createElement('div');
-    dynamicInputContainer.className = "form-group";
-    dynamicInputContainer.id = "dynamic-inputs";
-    // Insert it after the script selector dropdown
-    scriptSelect.closest('.form-group').after(dynamicInputContainer);
 
-    // --- A. Handle Dropdown Change ---
-    scriptSelect.addEventListener('change', (e) => {
-        // Clear previous dynamic inputs
-        dynamicInputContainer.innerHTML = '';
+    // --- STEP 1: Confirm Selection ---
+    confirmBtn.addEventListener('click', () => {
+        const selectedScript = scriptSelect.value;
         
-        if (e.target.value === 'client_offboarding') {
-            // Inject Site ID Input
-            const label = document.createElement('label');
-            label.innerText = "Target Site ID";
-            label.setAttribute('for', 'site_id');
+        // Reset dynamic area
+        dynamicContainer.innerHTML = '';
+        dynamicContainer.style.display = 'none';
+        runBtn.disabled = true;
+
+        if (!selectedScript) {
+            alert("Please choose a script first.");
+            return;
+        }
+
+        // Logic for "client_offboarding"
+        if (selectedScript === 'client_offboarding') {
+            dynamicContainer.style.display = 'block';
             
+            // Create Label
+            const label = document.createElement('label');
+            label.innerText = "Target Site ID (Required)";
+            label.style.fontWeight = "bold";
+            label.htmlFor = "site_id_input";
+
+            // Create Input
             const input = document.createElement('input');
             input.type = "text";
-            input.id = "site_id";
-            input.name = "site_id";
-            input.placeholder = "e.g., 11111111-2222-3333-4444-555555555555";
-            input.required = true; // Make it mandatory
+            input.id = "site_id_input";
+            input.placeholder = "e.g. 12345678-abcd-1234-abcd-1234567890ab";
+            input.required = true;
+            input.style.width = "100%";
+            input.style.marginTop = "5px";
+
+            // Append to DOM
+            dynamicContainer.appendChild(label);
+            dynamicContainer.appendChild(input);
             
-            dynamicInputContainer.appendChild(label);
-            dynamicInputContainer.appendChild(input);
+            // Enable Run button immediately (or validate input first if you prefer)
+            runBtn.disabled = false;
+        } else {
+            // For other scripts that don't need input, just enable run
+            runBtn.disabled = false;
         }
     });
 
-    // --- B. Handle Form Submission ---
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault(); // Stop standard HTML form submit
-        
-        const selectedScript = scriptSelect.value;
-        if (!selectedScript) return;
+    // --- Reset Handler ---
+    resetBtn.addEventListener('click', () => {
+        dynamicContainer.innerHTML = '';
+        dynamicContainer.style.display = 'none';
+        runBtn.disabled = true;
+        logOutput("Waiting for script execution...", true);
+    });
 
-        logOutput(`Starting execution for: ${selectedScript}...`);
+    // --- STEP 2: Run Script ---
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const scriptName = scriptSelect.value;
+        const args = document.getElementById('args').value;
+        
+        logOutput(`Starting execution: ${scriptName}...`, true);
+
+        // Prepare Payload
+        let payload = {
+            action: scriptName,
+            args: args
+        };
+
+        // Capture Site ID if it exists in DOM
+        const siteIdInput = document.getElementById('site_id_input');
+        if (siteIdInput) {
+            if (!siteIdInput.value.trim()) {
+                logOutput("ERROR: Site ID is missing!");
+                return;
+            }
+            payload.site_id = siteIdInput.value.trim();
+        }
 
         try {
-            // 1. Gather Data
-            let payload = {
-                action: selectedScript,
-                args: document.getElementById('args').value
-            };
-
-            // If we are offboarding, grab the Site ID
-            if (selectedScript === 'client_offboarding') {
-                const siteId = document.getElementById('site_id').value;
-                if (!siteId) throw new Error("Site ID is required for this script.");
-                payload.site_id = siteId;
-            }
-
-            // 2. Initialize Glia (Lazy Load)
-            if (!window.getGliaApi) throw new Error("Glia API not found.");
-            
-            logOutput("Initializing Glia API...");
+            // 1. Initialize Glia
+            if (!window.getGliaApi) throw new Error("Glia API not detected.");
             const glia = await window.getGliaApi({ version: 'v1' });
             
-            logOutput("Fetching secure headers...");
+            // 2. Headers
+            logOutput("Authenticating...");
             const headers = await glia.getRequestHeaders();
             headers['Content-Type'] = 'application/json';
 
-            // 3. Call Middleware
-            logOutput("Sending request to Middleware...");
+            // 3. Network Request
+            logOutput(`Sending request to Middleware...`);
             const response = await fetch(functionURL, {
                 method: 'POST',
                 headers: headers,
                 body: JSON.stringify(payload)
             });
 
-            if (!response.ok) throw new Error(`Server Error: ${response.status}`);
+            if (!response.ok) throw new Error(`Server status: ${response.status}`);
 
             const data = await response.json();
             
-            // 4. Pretty Print Result
-            logOutput("SUCCESS:\n" + JSON.stringify(data, null, 2));
+            // 4. Display Results
+            logOutput("----------------------------------------");
+            logOutput("EXECUTION COMPLETE");
+            logOutput("----------------------------------------");
+            logOutput(JSON.stringify(data, null, 2));
 
         } catch (error) {
             console.error(error);
-            logOutput(`ERROR: ${error.message}`);
+            logOutput(`\nCRITICAL ERROR: ${error.message}`);
         }
     });
 
-    function logOutput(msg) {
-        // Append text to the existing console output
-        outputConsole.innerText = msg;
+    // Helper to write to the right-side console
+    function logOutput(msg, clear = false) {
+        if (clear) outputConsole.innerText = '';
+        outputConsole.innerText += msg + "\n";
     }
 });
