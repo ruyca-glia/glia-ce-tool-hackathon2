@@ -1,57 +1,65 @@
 // /static/js/client-app.js
 
-// 1. Define your Function URL 
+// 1. Configuration
 const functionURL = 'https://api.glia.com/integrations/c8ee55e8-eebb-4934-bf1f-17fbdcfa69b2/endpoint';
 
-// 2. Initialize the Glia Applet API
-// This waits for the Glia environment to be ready
-window.getGliaApi({ version: 'v1' }).then(glia => {
+// 2. Wait for the DOM to be ready (Standard practice)
+document.addEventListener("DOMContentLoaded", () => {
     
-    console.log('Glia API Initialized'); // Check console for this!
-
+    console.log("DOM Loaded. wiring up button...");
     const button = document.getElementById('runFunction');
-    const statusMsg = document.createElement('div'); // To show status on screen
+    
+    // Create a status message area so we don't have to rely only on console
+    const statusMsg = document.createElement('div');
+    statusMsg.style.marginTop = '10px';
     button.parentNode.appendChild(statusMsg);
 
-    // 3. Attach the click listener INSIDE the Glia promise
+    // 3. Attach the listener IMMEDIATELY
     button.addEventListener('click', async () => {
-        console.log('Button clicked. Fetching headers...');
-        statusMsg.innerText = 'Running...';
+        console.log('Button clicked. Attempting to access Glia API...');
+        statusMsg.innerText = 'Initializing Glia connection...';
+        statusMsg.style.color = 'blue';
 
         try {
-            // A: Get the secure headers from Glia (Magic step!)
+            // Check if Glia API is actually available in the window
+            if (!window.getGliaApi) {
+                throw new Error("Glia API not found. (Are you running locally?)");
+            }
+
+            // A: Initialize Glia API only when needed (Lazy Load)
+            const glia = await window.getGliaApi({ version: 'v1' });
+            
+            // B: Get Secure Headers
+            statusMsg.innerText = 'Fetching secure headers...';
             const headers = await glia.getRequestHeaders();
             headers['Content-Type'] = 'application/json';
 
-            // B: Call your Glia Function
+            // C: Call Middleware Function
+            statusMsg.innerText = 'Sending request to Middleware...';
             const response = await fetch(functionURL, {
                 method: 'POST',
-                headers: headers, // Use the auto-generated headers
+                headers: headers,
                 body: JSON.stringify({ 
                     payload: { action: 'manual_button_click' } 
                 })
             });
 
             if (!response.ok) {
-                throw new Error(`Function failed: ${response.status}`);
+                throw new Error(`Server responded with ${response.status}`);
             }
 
-            // C: Handle the result
+            // D: Handle Success
             const data = await response.json();
-            console.log('Function Response:', data);
+            console.log('Middleware Response:', data);
             
-            statusMsg.innerText = 'Success! Check Console.';
+            statusMsg.innerText = 'Success! Data received.';
             statusMsg.style.color = 'green';
 
         } catch (error) {
-            console.error('Error invoking function:', error);
-            statusMsg.innerText = 'Error: ' + error.message;
+            // This will now catch both "Glia missing" AND "Fetch failed"
+            console.error('Process Failed:', error);
+            statusMsg.innerText = error.message;
             statusMsg.style.color = 'red';
         }
     });
-
-}).catch(error => {
-    // This catches if window.getGliaApi is missing (e.g., running locally)
-    console.error('Glia API failed to load. Are you testing locally?', error);
-    alert('Glia API not found. If you are running this locally, it will not work without a mock.');
 });
