@@ -30,21 +30,19 @@
             <!-- Script Selection Panel -->
             <section class="panel">
                 <h2>Select Script</h2>
-                
+                <p>Scripts do not solve tickets - but they help!</p>
                 <form id="script-form" action="/tools/scripts/run" method="POST">
                     <div class="form-group">
                         <label for="script-select">Script</label>
                         <select id="script-select" name="script" required>
                             <option value="">Choose a script...</option>
-                            <optgroup label="Bash Scripts">
-                                <option value="cleanup_logs">cleanup_logs.sh - Clear old log files</option>
-                                <option value="health_check">health_check.sh - Run system health check</option>
-                                <option value="backup_db">backup_db.sh - Backup database</option>
+                            <optgroup label="Available for use">
+                                <option value="client_offboarding">client_offboarding - Disable non super-managers</option>
                             </optgroup>
-                            <optgroup label="Python Scripts">
-                                <option value="sync_data">sync_data.py - Sync external data</option>
-                                <option value="generate_report">generate_report.py - Generate weekly report</option>
-                                <option value="process_queue">process_queue.py - Process pending jobs</option>
+                            <optgroup label="Coming soon">
+                                <option value="client_onboarding">client_onboarding - Onboard faster!</option>
+                                <option value="site_cloning">site_cloning - Clone faster to production!</option>
+                                <option value="your_idea_here">your_idea_here - contact MX CE's for more info</option>
                             </optgroup>
                         </select>
                     </div>
