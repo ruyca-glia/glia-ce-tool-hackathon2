@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="./static/css/tool-page.css">
     <script async src="https://api.glia.com/salemove_integration.js"></script>
     <script type="text/javascript" src="//libs.glia.com/axon.js"></script>
+    <script src="./static/js/automations.js" defer></script>
 </head>
 
 <body>
@@ -105,9 +106,6 @@
 
             // Llamamos a la función
             await getFunctionResponse();
-
-            // Una vez terminada, actualizamos el contador en el dashboard
-            actualizarEstadoDashboard(`Operational - ${latestIssues.length} tickets pending`);
         });
     </script>
 </body>

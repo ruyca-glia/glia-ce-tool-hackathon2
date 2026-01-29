@@ -32,14 +32,6 @@ const LOG_MESSAGES = [
     "All complete!"
 ];
 
-// --- 2. INITIALIZATION ---
-document.addEventListener("DOMContentLoaded", () => {
-    populateTicketTable();
-    document.getElementById("ticketTableBody").addEventListener('click', handleTableClick);
-});
-
-// --- 3. CORE FUNCTIONS ---
-
 /** Populates the main table with mock ticket data */
 function populateTicketTable(issues) {
     const tableBody = document.getElementById("ticketTableBody");
