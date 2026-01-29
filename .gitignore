@@ -225,3 +225,15 @@ temp2.json
 
 # Jira Function Hooks
 /static/js/glia-functions/Jira/hooks/*
+
+static/js/glia-functions/Auth0/function-out.js
+static/js/glia-functions/Auth0/package-lock.json
+static/js/glia-functions/Jira/HEAD
+static/js/glia-functions/Jira/ce-tkt-jira-test copy.js
+static/js/glia-functions/Jira/ce-tkt-jira-test with Jira Forms.js
+static/js/glia-functions/Jira/ce-tkt-jira-test.js
+static/js/glia-functions/Jira/config
+static/js/glia-functions/Jira/description
+static/js/glia-functions/Jira/function-out.js
+static/js/glia-functions/Jira/info/
+static/js/glia-functions/Jira/package-lock.json
