@@ -50,6 +50,24 @@ body {
     font-weight: bold;
 }
 
+/* Automation Panel */
+.autopanel {
+    background-color: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    padding: 1.5rem;
+    width: 1200px;
+}
+
+.autopanel h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--gray-200);
+}
+
 /* New container for the checkbox */
 .approval-container {
     margin-top: 20px;
