@@ -42,8 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Create Label for API Token
             const labelToken = document.createElement('labelToken');
-            labelToken.innerText = "API Token for Client Assit";
-            labelToken.style.fontWeight = "bold";
+            labelToken.innerText = "API Token for Client Assist";
             labelToken.htmlFor = "api_token_input";
 
             // Create Input for SiteID
@@ -62,7 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
             inputToken.placeholder = "e.g. fAFEnmsfUHk38fn3";
             inputToken.required = true;
             inputToken.style.width = "100%";
-            inputToken.style.marginTop = "5px";
+            inputToken.style.marginTop = "10px";
 
             // Append to DOM
             dynamicContainer.appendChild(label);
@@ -108,6 +107,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
             payload.site_id = siteIdInput.value.trim();
+        }
+
+        // Caputre API Token ID if it exists in DOM
+        const apiTokenInput = document.getElementById("api_token_input");
+        if (apiTokenInput) {
+            if (!apiTokenInput.value.trim()) {
+                logOutput("ERROR: API Token is missing!");
+                return;
+            }
+            payload.api_token = apiTokenInput.value.trim();
         }
 
         try {

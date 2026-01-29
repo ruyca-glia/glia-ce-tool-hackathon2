@@ -34,6 +34,29 @@ export async function onInvoke(request, env) {
     }
     
     const siteId = body.site_id;
+    const apiKey = body.api_token;
+    const url = `https://api.glia.com/operator_authentication/tokens?api_token=${apiKey}`;
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Accept": "application/vnd.salemove.v1+json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({})
+    });
+
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
+    }
+
+    // 1. Convert the raw response into a JavaScript object
+    const data = await response.json();
+
+    // 2. Extract the specific token string into your variable
+    // (Note: The property from Glia is usually named 'token' or 'access_token')
+    const TOKEN = data.token; 
+    console.log("My Bearer Token is:", TOKEN);
     
     if (!siteId) {
       return Response.json({ 
