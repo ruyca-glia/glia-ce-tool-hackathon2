@@ -1,4 +1,4 @@
-const TOKEN = "eyJhbGciOiJFUzI1NiIsImtpZCI6IjU3YjVmYTFjLTBhMzgtNDFkOS1hYWNiLWUyYzhmZmQxNTQyOCIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X2lkIjoiYTA0ZDRmNzYtN2E5Mi00OGE0LTk5MDUtNzFiOTk4Mjg2YTlhIiwiYXV0aF9zY2hlbWEiOiJhcGlfdG9rZW4iLCJleHAiOjE3Njk3MDc1ODQsImlhdCI6MTc2OTcwMzk4NCwiaXNzIjoiU2FsZU1vdmUgT3BlcmF0b3IgQXV0aCIsInJvbGVzIjpbeyJvcGVyYXRvcl9pZCI6IjgwYzcyMGJiLWQ4NWQtNDZkNy04NDk0LTdkM2E0MzQ1OWRhMyIsInR5cGUiOiJvcGVyYXRvciJ9LHsiZW5hYmxlX3BvbGljeV9hdXRob3JpemF0aW9uIjp0cnVlLCJyb2xlIjoic3VwZXJfbWFuYWdlciIsInNpdGVfaWQiOiI0MmE4ZjEyNC1mNjgxLTQ2NzMtYmUzZC05YzNmMWQzNDliMWEiLCJ0eXBlIjoic2l0ZV9vcGVyYXRvciJ9XSwic3ViIjoib3BlcmF0b3I6ODBjNzIwYmItZDg1ZC00NmQ3LTg0OTQtN2QzYTQzNDU5ZGEzIn0.rMRQsj2X7yYZ40JTrbFmQOQhVWGUc8hOCtBPopdsq0etnNVqPigXm2BgWobG7WXDZgnc888MN3ji1BVGv4pctg"; 
+const TOKEN = "eyJhbGciOiJFUzI1NiIsImtpZCI6IjU3YjVmYTFjLTBhMzgtNDFkOS1hYWNiLWUyYzhmZmQxNTQyOCIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X2lkIjoiYTA0ZDRmNzYtN2E5Mi00OGE0LTk5MDUtNzFiOTk4Mjg2YTlhIiwiYXV0aF9zY2hlbWEiOiJhcGlfdG9rZW4iLCJleHAiOjE3Njk3MTA3NTgsImlhdCI6MTc2OTcwNzE1OCwiaXNzIjoiU2FsZU1vdmUgT3BlcmF0b3IgQXV0aCIsInJvbGVzIjpbeyJvcGVyYXRvcl9pZCI6IjgwYzcyMGJiLWQ4NWQtNDZkNy04NDk0LTdkM2E0MzQ1OWRhMyIsInR5cGUiOiJvcGVyYXRvciJ9LHsiZW5hYmxlX3BvbGljeV9hdXRob3JpemF0aW9uIjp0cnVlLCJyb2xlIjoic3VwZXJfbWFuYWdlciIsInNpdGVfaWQiOiI0MmE4ZjEyNC1mNjgxLTQ2NzMtYmUzZC05YzNmMWQzNDliMWEiLCJ0eXBlIjoic2l0ZV9vcGVyYXRvciJ9XSwic3ViIjoib3BlcmF0b3I6ODBjNzIwYmItZDg1ZC00NmQ3LTg0OTQtN2QzYTQzNDU5ZGEzIn0.g5_Xgye33DgvlYkQ8xTi8FtL-AhbMGmyejhOY3eyIvrjH3hIMId_xyo393LaxV6Ue8ep335q6qGAk8vo84ulzQ"; 
 
 function isSuperManager(operator) {
   if (operator.role === 'super_manager') return true;
@@ -12,20 +12,42 @@ function isSuperManager(operator) {
 
 export async function onInvoke(request, env) {
   try {
+    // --- STEP 1: PARSE THE INCOMING DATA CORRECTLY ---
+    
+    // 1a. Parse the outer Glia Envelope
+    let envelope = {};
+    try { 
+        envelope = await request.json(); 
+    } catch(e) { 
+        return Response.json({ error: "Failed to parse request body" }, { status: 400 }); 
+    }
+
+    // 1b. Parse the inner Payload String
+    // Your debug log shows "payload" is a STRING, so we must JSON.parse() it again.
     let body = {};
-    try { body = await request.json(); } catch(e) { console.log(e) }
+    try {
+        if (typeof envelope.payload === 'string') {
+            body = JSON.parse(envelope.payload);
+        } else {
+            // Fallback in case Glia sometimes passes it as an object
+            body = envelope.payload || {}; 
+        }
+    } catch (e) {
+        return Response.json({ error: "Failed to parse inner payload string" }, { status: 400 });
+    }
     
     const siteId = body.site_id;
     
     if (!siteId) {
-      return Response.json({ error: "Missing required 'site_id'" }, { status: 400 });
+      return Response.json({ 
+        error: "Missing required 'site_id'", 
+        debug_payload: body // Return this to help you debug if it fails again
+      }, { status: 400 });
     }
 
-    // 1. GET All Operators
+    // --- STEP 2: GET OPERATORS ---
     const params = new URLSearchParams();
-    
-    // Key MUST be 'site_ids[]' to be recognized as an array filter by the API
-    params.append("site_ids[]", siteId); 
+    params.append("site_ids[]", siteId); // The array fix
     params.append("include_support", "false");
     params.append("view", "full");
 
@@ -38,17 +60,32 @@ export async function onInvoke(request, env) {
     });
 
     if (!listResp.ok) {
-      return Response.json({ error: "Glia API Error (List)", status: listResp.status });
+      return Response.json({ error: "Glia API List Failed", status: listResp.status });
     }
 
-    const allOps = await listResp.json();
+    // Capture the raw body first
+    const apiResponse = await listResp.json();
 
-    // 2. FILTER
+    // CRITICAL FIX: Determine if it's a direct array or a wrapper
+    let allOps = [];
+    if (Array.isArray(apiResponse)) {
+        allOps = apiResponse;
+    } else if (apiResponse.operators && Array.isArray(apiResponse.operators)) {
+        allOps = apiResponse.operators;
+    } else {
+        // Debugging fallback: If we can't find the list, return the structure so we can see it
+        return Response.json({ 
+            error: "Unexpected API format. Could not find operator array.", 
+            received_structure: apiResponse 
+        }, { status: 500 });
+    }
+
+    // --- STEP 3: FILTER & DELETE ---
     const targets = allOps.filter(op => !isSuperManager(op));
     const kept = allOps.filter(op => isSuperManager(op));
 
-    // 3. DELETE (Disable) Targets - Parallel Execution
-    // We map the delete requests to an array of promises
+
+    // Run deletes in PARALLEL to prevent 503 Timeouts
     const deletePromises = targets.map(async (op) => {
         const delResp = await fetch(`https://api.glia.com/operators/${op.id}`, {
             method: "DELETE", 
@@ -58,33 +95,30 @@ export async function onInvoke(request, env) {
             }
         });
 
-        if (delResp.ok) {
-            return { success: true, email: op.email };
-        } else {
-            return { success: false, email: op.email, code: delResp.status };
-        }
+        // Return a simple status object
+        return { 
+            email: op.email, 
+            success: delResp.ok, 
+            code: delResp.status 
+        };
     });
 
-    // Wait for all deletions to finish
-    const resultsRaw = await Promise.all(deletePromises);
+    const results = await Promise.all(deletePromises);
 
-    // Process results for reporting
-    const successList = resultsRaw.filter(r => r.success).map(r => r.email);
-    const failureList = resultsRaw.filter(r => !r.success);
-
+    // --- STEP 4: REPORT ---
+    
     return Response.json({
       status: "Success",
       report: {
         site_id: siteId,
-        total_users_scanned: allOps.length,
+        total_found: allOps.length,
         super_managers_preserved: kept.length,
-        users_disabled: successList.length,
-        disabled_list: successList,
-        failures: failureList
+        deleted_count: results.filter(r => r.success).length,
+        details: results
       }
     });
 
   } catch (err) {
-    return Response.json({ error: err.message }, { status: 500 });
+    return Response.json({ error: err.message, stack: err.stack }, { status: 500 });
   }
 }
