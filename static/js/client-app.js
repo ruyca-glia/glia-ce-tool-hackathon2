@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
             label.htmlFor = "site_id_input";
 
             // Create Label for API Token
-            const labelToken = document.createElement('labelToken');
+            const labelToken = document.createElement('label');
             labelToken.innerText = "API Token for Client Assist";
             labelToken.htmlFor = "api_token_input";
 
