@@ -222,3 +222,6 @@ temp2.json
 .DS_Store
 /static/css/.DS_Store
 /static/*DS_Store
+
+# Jira Function Hooks
+/static/js/glia-functions/Jira/hooks/*
