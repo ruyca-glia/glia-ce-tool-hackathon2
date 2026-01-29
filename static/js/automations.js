@@ -1,18 +1,3 @@
-
-// Lógica para cambiar entre vistas
-function showView(idVista, event) {
-    if (event) event.preventDefault(); // Esto detiene la navegación del enlace
-
-    // 1. Ocultar todas las vistas
-    document.getElementById('main-view').classList.add('hidden');
-    document.getElementById('onboarding-main-view').classList.add('hidden');
-    document.getElementById('automation-main-view').classList.add('hidden');
-
-    // 2. Mostrar la vista deseada
-    document.getElementById(idVista).classList.remove('hidden');
-}
-
-
 //Logica para tabla de Tickets - Actions
 // --- 1. MOCK DATA & CONFIG ---
 const MOCK_TICKETS = 3;
@@ -35,7 +20,9 @@ const LOG_MESSAGES = [
 /** Populates the main table with mock ticket data */
 function populateTicketTable(issues) {
     const tableBody = document.getElementById("ticketTableBody");
-    tableBody.innerHTML = ""; // Limpiar carga previa
+    if (!tableBody) return; // Guard clause para evitar errores
+    
+    tableBody.innerHTML = ""; 
 
     issues.forEach((issue, index) => {
         const priority = issue.customField !== "N/A" ? issue.customField.split(' - ')[0] : "N/A";
@@ -45,10 +32,9 @@ function populateTicketTable(issues) {
         row.innerHTML = `
             <td><a href="${jiraLink}" target="_blank" style="font-weight:bold; color:var(--primary);">${issue.key}</a></td>
             <td>${priority}</td>
-            <td>Grant GVA Access/td>
-            <td><span class="badge badge-info">Open</span></td>
+            <td>Grant GVA Access</td> <td><span class="badge badge-info">Open</span></td>
             <td>
-                <button class="pure-button purple-button go-button" onclick="handleGoClick(${index})">
+                <button class="btn btn-primary go-button" onclick="handleGoClick(${index})">
                     GO!
                 </button>
             </td>
@@ -174,27 +160,31 @@ const functionUrl = 'https://api.glia.com/integrations/709f8159-7814-432c-b5ac-1
 
 // Calling my function
 async function getFunctionResponse() {
-    const glia = await window.getGliaApi({ version: 'v1' });
-    const headers = await glia.getRequestHeaders();
-    headers['Content-Type'] = 'application/json';
+    console.log("Iniciando llamada a Glia API...");
+    try {
+        const glia = await window.getGliaApi({ version: 'v1' });
+        const headers = await glia.getRequestHeaders();
+        headers['Content-Type'] = 'application/json';
 
-    const response = await fetch(functionUrl, {
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify({})
-    });
+        const response = await fetch('https://api.glia.com/integrations/709f8159-7814-432c-b5ac-154aef00f456/endpoint', {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify({})
+        });
 
-    const resultado = await response.json();
+        const resultado = await response.json();
 
-    if (resultado.success) {
-        // 1. Guardamos los issues en nuestra variable global
-        latestIssues = resultado.issues;
-
-        // 2. Llamamos a la función para pintar la tabla
-        populateTicketTable(latestIssues);
-
-        console.log("Tabla actualizada con", resultado.total, "tickets.");
-    } else {
-        console.error("Error en la función:", resultado.error);
+        if (resultado.success) {
+            latestIssues = resultado.issues; // Guardamos en la variable global
+            populateTicketTable(latestIssues);
+            console.log("Tabla actualizada con éxito.");
+        }
+    } catch (error) {
+        console.error("Error crítico en la comunicación con la API:", error);
     }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Si queremos que cargue apenas entras a la vista de automatización:
+    getFunctionResponse(); 
+});
