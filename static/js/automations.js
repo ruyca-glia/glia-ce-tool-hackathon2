@@ -1,3 +1,7 @@
+let latestIssues = []; // Global variable for list of issues
+const automationUrl = 'https://api.glia.com/integrations/8c29e917-f94a-4639-bb8d-583882802ec1/endpoint';
+
+
 //Logica para tabla de Tickets - Actions
 // --- 1. MOCK DATA & CONFIG ---
 const MOCK_TICKETS = 3;
@@ -105,39 +109,58 @@ function handleGoClick(index) {
     ticketRow.parentNode.insertBefore(collapsibleRow, ticketRow.nextSibling);
 }
 
-/** Starts the logging simulation when "Trigger" is clicked */
-function handleTriggerClick(button) {
+/** * Triggers the Auth0 call with the users email
+ */
+async function handleTriggerClick(button, index) {
+    const issue = latestIssues[index];
+    const fullEmailString = issue.formData["User’s Full Name + User Email"] || "";
+    
+    // Extracting the email from the string "Name - email@glia.com"
+    const email = fullEmailString.includes(" - ") 
+        ? fullEmailString.split(" - ")[1] 
+        : fullEmailString;
+
+    // UI State
     button.disabled = true;
-    button.innerHTML = 'Processing... <div class="loader"></div>';
+    button.innerHTML = 'Invoking... <div class="loader"></div>';
 
-    const logsPanel = button.closest('td').querySelector('.logs-panel');
-    logsPanel.innerHTML = `
-            <div class="logs-container">
-            <div class="progress-bar"><div class="progress-bar-inner"></div></div>
-            <div class="log-lines"></div>
-            </div>
-        `;
+    try {
+        // 1. Get Glia headers
+        const glia = await window.getGliaApi({ version: 'v1' });
+        const headers = await glia.getRequestHeaders();
+        headers['Content-Type'] = 'application/json';
 
-    const logLinesContainer = logsPanel.querySelector('.log-lines');
-    const progressBarInner = logsPanel.querySelector('.progress-bar-inner');
-    let logIndex = 0;
+        // 2. API Call to auth0_retrieveuser function
+        // const response = await fetch(automationUrl, {
+        //     method: 'POST',
+        //     headers: headers,
+        //     body: JSON.stringify({ 
+        //         userEmail: email,
+        //         ticketKey: issue.key,
+        //         botCode: issue.formData["Bot Code"]
+        //     })
+        // });
 
-    const logInterval = setInterval(() => {
-        if (logIndex < LOG_MESSAGES.length) {
-            const p = document.createElement('p');
-            p.className = 'log-line';
-            p.textContent = LOG_MESSAGES[logIndex];
-            logLinesContainer.appendChild(p);
+        const response = await fetch(automationUrl, {
+            method: 'POST',
+            headers: headers
+        });
 
-            const progress = ((logIndex + 1) / LOG_MESSAGES.length) * 100;
-            progressBarInner.style.width = `${progress}%`;
 
-            logIndex++;
+        const data = await response.json();
+
+        if (response.ok) {
+            // 3. Si la API responde bien, iniciamos la simulación visual de logs
+            console.log(data)
         } else {
-            clearInterval(logInterval);
-            // Don't re-enable the button after one run
+            throw new Error(data.error || "Fallo en la automatización");
         }
-    }, 500);
+
+    } catch (error) {
+        console.error("Error detonando automatización:", error);
+        button.innerHTML = 'Error';
+        alert("No se pudo iniciar la automatización: " + error.message);
+    }
 }
 
 /** NEW: Enables or disables the Trigger button based on the checkbox state */
@@ -185,7 +208,6 @@ async function getFunctionResponse() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    let latestIssues = [];
     // Si queremos que cargue apenas entras a la vista de automatización:
     getFunctionResponse(); 
 });
