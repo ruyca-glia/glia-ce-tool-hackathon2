@@ -61,7 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
             inputToken.placeholder = "e.g. fAFEnmsfUHk38fn3";
             inputToken.required = true;
             inputToken.style.width = "100%";
-            inputToken.style.marginTop = "10px";
+            inputToken.style.marginTop = "5px";
 
             // Append to DOM
             dynamicContainer.appendChild(label);
