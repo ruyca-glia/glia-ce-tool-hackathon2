@@ -67,7 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
             // Append to DOM
             dynamicContainer.appendChild(label);
             dynamicContainer.appendChild(input);
-            dyanimcContainer.appendChild(labelToken);
+            dynamicContainer.appendChild(labelToken);
             dynamicContainer.appendChild(inputToken);
             
             // Enable Run button immediately 
