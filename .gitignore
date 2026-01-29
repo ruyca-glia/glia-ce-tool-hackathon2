@@ -217,3 +217,7 @@ yarn-error.log*
 # Testing some outputs
 temp.json
 temp2.json
+
+# DS Store
+.DS_Store
+/static/css/.DS_Store
