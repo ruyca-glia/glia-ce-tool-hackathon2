@@ -1,5 +1,3 @@
-const TOKEN = "eyJhbGciOiJFUzI1NiIsImtpZCI6IjU3YjVmYTFjLTBhMzgtNDFkOS1hYWNiLWUyYzhmZmQxNTQyOCIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X2lkIjoiYTA0ZDRmNzYtN2E5Mi00OGE0LTk5MDUtNzFiOTk4Mjg2YTlhIiwiYXV0aF9zY2hlbWEiOiJhcGlfdG9rZW4iLCJleHAiOjE3Njk3MTA3NTgsImlhdCI6MTc2OTcwNzE1OCwiaXNzIjoiU2FsZU1vdmUgT3BlcmF0b3IgQXV0aCIsInJvbGVzIjpbeyJvcGVyYXRvcl9pZCI6IjgwYzcyMGJiLWQ4NWQtNDZkNy04NDk0LTdkM2E0MzQ1OWRhMyIsInR5cGUiOiJvcGVyYXRvciJ9LHsiZW5hYmxlX3BvbGljeV9hdXRob3JpemF0aW9uIjp0cnVlLCJyb2xlIjoic3VwZXJfbWFuYWdlciIsInNpdGVfaWQiOiI0MmE4ZjEyNC1mNjgxLTQ2NzMtYmUzZC05YzNmMWQzNDliMWEiLCJ0eXBlIjoic2l0ZV9vcGVyYXRvciJ9XSwic3ViIjoib3BlcmF0b3I6ODBjNzIwYmItZDg1ZC00NmQ3LTg0OTQtN2QzYTQzNDU5ZGEzIn0.g5_Xgye33DgvlYkQ8xTi8FtL-AhbMGmyejhOY3eyIvrjH3hIMId_xyo393LaxV6Ue8ep335q6qGAk8vo84ulzQ"; 
-
 function isSuperManager(operator) {
   if (operator.role === 'super_manager') return true;
   if (operator.assignments && Array.isArray(operator.assignments)) {
@@ -23,7 +21,6 @@ export async function onInvoke(request, env) {
     }
 
     // 1b. Parse the inner Payload String
-    // Your debug log shows "payload" is a STRING, so we must JSON.parse() it again.
     let body = {};
     try {
         if (typeof envelope.payload === 'string') {

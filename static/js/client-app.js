@@ -32,16 +32,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Logic for "client_offboarding"
         if (selectedScript === 'client_offboarding') {
-            console.log("if condition TRUE");
             dynamicContainer.style.display = 'block';
             
-            // Create Label
+            // Create Label for SiteID
             const label = document.createElement('label');
             label.innerText = "Target Site ID (Required)";
             label.style.fontWeight = "bold";
             label.htmlFor = "site_id_input";
 
-            // Create Input
+            // Create Label for API Token
+            const labelToken = document.createElement('labelToken');
+            labelToken.innerText = "API Token for Client Assit";
+            labelToken.style.fontWeight = "bold";
+            labelToken.htmlFor = "api_token_input";
+
+            // Create Input for SiteID
             const input = document.createElement('input');
             input.type = "text";
             input.id = "site_id_input";
@@ -50,9 +55,20 @@ document.addEventListener("DOMContentLoaded", () => {
             input.style.width = "100%";
             input.style.marginTop = "5px";
 
+            // Create Input for API Token
+            const inputToken = document.createElement('input');
+            inputToken.type = "text";
+            inputToken.id = "api_token_input";
+            inputToken.placeholder = "e.g. fAFEnmsfUHk38fn3";
+            inputToken.required = true;
+            inputToken.style.width = "100%";
+            inputToken.style.marginTop = "5px";
+
             // Append to DOM
             dynamicContainer.appendChild(label);
             dynamicContainer.appendChild(input);
+            dyanimcContainer.appendChild(labelToken);
+            dynamicContainer.appendChild(inputToken);
             
             // Enable Run button immediately 
             runBtn.disabled = false;
