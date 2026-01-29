@@ -1,12 +1,7 @@
-/* ===========================================
-   Internal Tools Dashboard - Stylesheet
-   Primary: Purple (81, 15, 164)
-   Complementary: White
-   Design: Minimal, functional, low maintenance
-   =========================================== */
-
-/* Reset and Base */
-*, *::before, *::after {
+/* Base Main Manifest */
+*,
+*::before,
+*::after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
@@ -242,12 +237,16 @@ body {
         gap: 0.5rem;
         text-align: center;
     }
-    
+
     .tools-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .status-grid {
         grid-template-columns: 1fr;
     }
+}
+
+.hidden {
+    display: none;
 }
