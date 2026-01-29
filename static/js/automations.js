@@ -41,24 +41,28 @@ document.addEventListener("DOMContentLoaded", () => {
 // --- 3. CORE FUNCTIONS ---
 
 /** Populates the main table with mock ticket data */
-function populateTicketTable() {
+function populateTicketTable(issues) {
     const tableBody = document.getElementById("ticketTableBody");
-    tableBody.innerHTML = ""; // Clear existing
-    for (let i = 0; i < MOCK_TICKETS; i++) {
-        const ticketKey = `CE-${7000 + Math.floor(Math.random() * 1000)}`;
-        const priority = PRIORITIES[Math.floor(Math.random() * PRIORITIES.length)];
-        const jiraLink = `https://glia.atlassian.net/browse/${ticketKey}`;
+    tableBody.innerHTML = ""; // Limpiar carga previa
+
+    issues.forEach((issue, index) => {
+        const priority = issue.customField !== "N/A" ? issue.customField.split(' - ')[0] : "N/A";
+        const jiraLink = `https://glia.atlassian.net/browse/${issue.key}`;
 
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td>${ticketKey}</td>
+            <td><a href="${jiraLink}" target="_blank" style="font-weight:bold; color:var(--primary);">${issue.key}</a></td>
             <td>${priority}</td>
-            <td>Update GVA API Key and Secret</td>
-            <td><a href="${jiraLink}" target="_blank">${ticketKey}</a></td>
-            <td><button class="pure-button purple-button go-button" data-ticket-key="${ticketKey}">GO!</button></td>
-            `;
+            <td>Grant GVA Access/td>
+            <td><span class="badge badge-info">Open</span></td>
+            <td>
+                <button class="pure-button purple-button go-button" onclick="handleGoClick(${index})">
+                    GO!
+                </button>
+            </td>
+        `;
         tableBody.appendChild(row);
-    }
+    });
 }
 
 /** Handles all clicks inside the table body */
@@ -73,38 +77,53 @@ function handleTableClick(event) {
     }
 }
 
-/** Shows the collapsible details panel when "GO!" is clicked */
-function handleGoClick(button) {
-    getFunctionResponse();
+/**
+ * Se activa al dar clic en GO! y llena el panel de detalles con la data de Jira
+ */
+function handleGoClick(index) {
+    // 1. Obtenemos el ticket específico de nuestra variable global
+    const issue = latestIssues[index];
+    const formData = issue.formData || {};
+
+    // Limpiamos paneles abiertos antes de mostrar el nuevo
     clearActivePanels();
 
-    const ticketRow = button.closest('tr');
+    // 2. Buscamos la fila para insertar el panel justo debajo
+    const allButtons = document.querySelectorAll('.go-button');
+    const ticketRow = allButtons[index].closest('tr');
+    
     const collapsibleRow = document.createElement('tr');
     collapsibleRow.className = 'collapsible-row';
-    // <-- MODIFIED: Added checkbox and set trigger button to 'disabled'
+
+    // 3. Procesamos los Roles (que son un Array) para mostrarlos como lista
+    const rolesHtml = Array.isArray(formData["Roles needed to be added for Auth0"])
+        ? `<ul>${formData["Roles needed to be added for Auth0"].map(r => `<li>${r}</li>`).join('')}</ul>`
+        : "N/A";
+
     collapsibleRow.innerHTML = `
-            <td colspan="5">
+        <td colspan="5">
             <div class="details-container">
-                <dl class="details-grid">
-                <dt>Summary</dt><dd>Generate API Key + Secret, Add Handover Queue and Site ID for CLIENT</dd>
-                <dt>Client</dt><dd>Glia's CLIENT NAME</dd>
-                <dt>Bot Code</dt><dd>glia-phone-gva</dd>
-                <dt>Environment</dt><dd>uat</dd>
-                <dt>Site ID</dt><dd>Carlos Gomez Staging - d42c5832-2e79-4a7e-bfb5-f006e1a17676</dd>
-                <dt>Queue ID</dt><dd>f3592f2c-fb17-4f21-9cd5-8c8648e3a58c</dd>
-                </dl>
-                <div class="approval-container">
-                <label>
-                    <input type="checkbox" class="approval-checkbox"> Approve request
-                </label>
+                <div class="details-grid">
+                    <dt>Summary</dt><dd>${issue.summary}</dd>
+                    <dt>Bot Code</dt><dd><code>${formData["Bot Code"] || 'N/A'}</code></dd>
+                    <dt>User Email</dt><dd>${formData["User’s Full Name + User Email"] || 'N/A'}</dd>
+                    <dt>Roles</dt><dd>${rolesHtml}</dd>
+                    <dt>Timezone</dt><dd>${formData["Timezone"] || 'N/A'}</dd>
                 </div>
+                
+                <div class="approval-container">
+                    <label><input type="checkbox" class="approval-checkbox"> This looks great! </label>
+                </div>
+                
                 <div class="trigger-button-container">
-                <button class="pure-button purple-button trigger-button" disabled>Trigger</button>
+                    <button class="pure-button purple-button trigger-button" disabled onclick="handleTriggerClick(this)">
+                        Trigger Automation
+                    </button>
                 </div>
             </div>
             <div class="logs-panel"></div>
-            </td>
-        `;
+        </td>
+    `;
     ticketRow.parentNode.insertBefore(collapsibleRow, ticketRow.nextSibling);
 }
 
@@ -175,9 +194,15 @@ async function getFunctionResponse() {
 
     const resultado = await response.json();
 
-    if (resultado.error) {
-        console.log(resultado.Error);
+    if (resultado.success) {
+        // 1. Guardamos los issues en nuestra variable global
+        latestIssues = resultado.issues;
+
+        // 2. Llamamos a la función para pintar la tabla
+        populateTicketTable(latestIssues);
+
+        console.log("Tabla actualizada con", resultado.total, "tickets.");
     } else {
-        console.log(JSON.stringify(resultado, null, 2));
+        console.error("Error en la función:", resultado.error);
     }
 }
