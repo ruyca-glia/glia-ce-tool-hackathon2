@@ -90,7 +90,7 @@ function handleGoClick(index) {
                 </div>
                 
                 <div class="approval-container">
-                    <label><input type="checkbox" class="approval-checkbox" onclick="handleApprovalCheck(this)> This looks great! </label>
+                    <label><input type="checkbox" class="approval-checkbox" onclick="handleApprovalCheck(this)"> This looks great! </label>
                 </div>
                 
                 <div class="trigger-button-container">
