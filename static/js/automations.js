@@ -60,24 +60,18 @@ function handleTableClick(event) {
 }
 
 /**
- * Se activa al dar clic en GO! y llena el panel de detalles con la data de Jira
+ * Se activa al dar clic en GO! y llena el panel de detalles
  */
 function handleGoClick(index) {
-    // 1. Obtenemos el ticket específico de nuestra variable global
     const issue = latestIssues[index];
     const formData = issue.formData || {};
-
-    // Limpiamos paneles abiertos antes de mostrar el nuevo
     clearActivePanels();
 
-    // 2. Buscamos la fila para insertar el panel justo debajo
     const allButtons = document.querySelectorAll('.go-button');
     const ticketRow = allButtons[index].closest('tr');
-    
     const collapsibleRow = document.createElement('tr');
     collapsibleRow.className = 'collapsible-row';
 
-    // 3. Procesamos los Roles (que son un Array) para mostrarlos como lista
     const rolesHtml = Array.isArray(formData["Roles needed to be added for Auth0"])
         ? `<ul>${formData["Roles needed to be added for Auth0"].map(r => `<li>${r}</li>`).join('')}</ul>`
         : "N/A";
@@ -90,15 +84,14 @@ function handleGoClick(index) {
                     <dt>Bot Code</dt><dd><code>${formData["Bot Code"] || 'N/A'}</code></dd>
                     <dt>User Email</dt><dd>${formData["User’s Full Name + User Email"] || 'N/A'}</dd>
                     <dt>Roles</dt><dd>${rolesHtml}</dd>
-                    <dt>Timezone</dt><dd>${formData["Timezone"] || 'N/A'}</dd>
                 </div>
                 
                 <div class="approval-container">
-                    <label><input type="checkbox" class="approval-checkbox" onclick="handleApprovalCheck(this)"> This looks great! </label>
+                    <label><input type="checkbox" class="approval-checkbox" onclick="handleApprovalCheck(this)"> This looks great!</label>
                 </div>
                 
                 <div class="trigger-button-container">
-                    <button class="pure-button purple-button trigger-button" disabled onclick="handleTriggerClick(this)">
+                    <button class="pure-button purple-button trigger-button" disabled onclick="handleTriggerClick(this, ${index})">
                         Trigger Automation
                     </button>
                 </div>
