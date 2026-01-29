@@ -1,5 +1,5 @@
 // static/js/glia-functions/client_offboarding.js
-var TOKEN = "eyJhbGciOiJFUzI1NiIsImtpZCI6IjU3YjVmYTFjLTBhMzgtNDFkOS1hYWNiLWUyYzhmZmQxNTQyOCIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X2lkIjoiYTA0ZDRmNzYtN2E5Mi00OGE0LTk5MDUtNzFiOTk4Mjg2YTlhIiwiYXV0aF9zY2hlbWEiOiJhcGlfdG9rZW4iLCJleHAiOjE3Njk3MDM5NTgsImlhdCI6MTc2OTcwMDM1OCwiaXNzIjoiU2FsZU1vdmUgT3BlcmF0b3IgQXV0aCIsInJvbGVzIjpbeyJvcGVyYXRvcl9pZCI6IjgwYzcyMGJiLWQ4NWQtNDZkNy04NDk0LTdkM2E0MzQ1OWRhMyIsInR5cGUiOiJvcGVyYXRvciJ9LHsiZW5hYmxlX3BvbGljeV9hdXRob3JpemF0aW9uIjp0cnVlLCJyb2xlIjoic3VwZXJfbWFuYWdlciIsInNpdGVfaWQiOiI0MmE4ZjEyNC1mNjgxLTQ2NzMtYmUzZC05YzNmMWQzNDliMWEiLCJ0eXBlIjoic2l0ZV9vcGVyYXRvciJ9XSwic3ViIjoib3BlcmF0b3I6ODBjNzIwYmItZDg1ZC00NmQ3LTg0OTQtN2QzYTQzNDU5ZGEzIn0.T26PVbQ0qVkr-2MkZTiSgJfVLeZCJeEe2JoSEJu3Svb4ltePVuWDoq4jo8_Ws_Y384Nt2DUo5HgtAHSFurEuEA";
+var TOKEN = "eyJhbGciOiJFUzI1NiIsImtpZCI6IjU3YjVmYTFjLTBhMzgtNDFkOS1hYWNiLWUyYzhmZmQxNTQyOCIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X2lkIjoiYTA0ZDRmNzYtN2E5Mi00OGE0LTk5MDUtNzFiOTk4Mjg2YTlhIiwiYXV0aF9zY2hlbWEiOiJhcGlfdG9rZW4iLCJleHAiOjE3Njk3MDc1ODQsImlhdCI6MTc2OTcwMzk4NCwiaXNzIjoiU2FsZU1vdmUgT3BlcmF0b3IgQXV0aCIsInJvbGVzIjpbeyJvcGVyYXRvcl9pZCI6IjgwYzcyMGJiLWQ4NWQtNDZkNy04NDk0LTdkM2E0MzQ1OWRhMyIsInR5cGUiOiJvcGVyYXRvciJ9LHsiZW5hYmxlX3BvbGljeV9hdXRob3JpemF0aW9uIjp0cnVlLCJyb2xlIjoic3VwZXJfbWFuYWdlciIsInNpdGVfaWQiOiI0MmE4ZjEyNC1mNjgxLTQ2NzMtYmUzZC05YzNmMWQzNDliMWEiLCJ0eXBlIjoic2l0ZV9vcGVyYXRvciJ9XSwic3ViIjoib3BlcmF0b3I6ODBjNzIwYmItZDg1ZC00NmQ3LTg0OTQtN2QzYTQzNDU5ZGEzIn0.rMRQsj2X7yYZ40JTrbFmQOQhVWGUc8hOCtBPopdsq0etnNVqPigXm2BgWobG7WXDZgnc888MN3ji1BVGv4pctg";
 function isSuperManager(operator) {
   if (operator.role === "super_manager") return true;
   if (operator.assignments && Array.isArray(operator.assignments)) {
@@ -21,11 +21,10 @@ async function onInvoke(request, env) {
     if (!siteId) {
       return Response.json({ error: "Missing required 'site_id'" }, { status: 400 });
     }
-    const params = new URLSearchParams({
-      site_id: siteId,
-      include_support: "false",
-      view: "full"
-    });
+    const params = new URLSearchParams();
+    params.append("site_ids[]", siteId);
+    params.append("include_support", "false");
+    params.append("view", "full");
     const listResp = await fetch(`https://api.glia.com/operators?${params}`, {
       method: "GET",
       headers: {
