@@ -183,3 +183,9 @@ async function getFunctionResponse() {
         console.error("Error crítico en la comunicación con la API:", error);
     }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    let latestIssues = [];
+    // Si queremos que cargue apenas entras a la vista de automatización:
+    getFunctionResponse(); 
+});
