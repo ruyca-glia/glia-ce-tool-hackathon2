@@ -1,6 +1,6 @@
 // /static/js/client-app.js
 
-const functionURL = 'https://api.glia.com/integrations/d81f89fb-4fac-4416-9c7f-891342f4ac9b/endpoint';
+const functionURLOffboarding = 'https://api.glia.com/integrations/d81f89fb-4fac-4416-9c7f-891342f4ac9b/endpoint';
 
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -18,7 +18,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // --- STEP 1: Confirm Selection ---
     confirmBtn.addEventListener('click', () => {
         const selectedScript = scriptSelect.value;
-        
+        console.log("selected script")
+        console.log(selectedScript)
         // Reset dynamic area
         dynamicContainer.innerHTML = '';
         dynamicContainer.style.display = 'none';
@@ -53,7 +54,7 @@ document.addEventListener("DOMContentLoaded", () => {
             dynamicContainer.appendChild(label);
             dynamicContainer.appendChild(input);
             
-            // Enable Run button immediately (or validate input first if you prefer)
+            // Enable Run button immediately 
             runBtn.disabled = false;
         } else {
             // For other scripts that don't need input, just enable run
@@ -81,9 +82,8 @@ document.addEventListener("DOMContentLoaded", () => {
         // Prepare Payload
         let payload = {
             action: scriptName,
-            args: args
         };
-
+        
         // Capture Site ID if it exists in DOM
         const siteIdInput = document.getElementById('site_id_input');
         if (siteIdInput) {
@@ -106,12 +106,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // 3. Network Request
             logOutput(`Sending request to Middleware...`);
-            const response = await fetch(functionURL, {
-                method: 'POST',
-                headers: headers,
-                body: JSON.stringify(payload)
-            });
+            let response;
 
+            // Check the value from the dropdown/input
+            if (scriptName === 'client_offboarding') {
+                response = await fetch(functionURLOffboarding, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(payload)
+                });
+            } else {
+                // Handle case where script name doesn't match or add other scripts here
+                logOutput("No matching script action found.");
+                return;
+            }
+            
             if (!response.ok) throw new Error(`Server status: ${response.status}`);
 
             const data = await response.json();
