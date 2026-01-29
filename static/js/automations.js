@@ -136,7 +136,10 @@ async function handleTriggerClick(button, index) {
 
         const response = await fetch(automationUrl, {
             method: 'POST',
-            headers: headers
+            headers: headers,
+            body: JSON.stringify({ 
+                userEmail: email
+            })
         });
 
 
