@@ -1,0 +1,11 @@
+{
+  "scripts": {
+    "build": "./node_modules/esbuild/bin/esbuild  --bundle --format=esm --outfile=function-out.js --target=es2020 auth0_retrieveuser.js"
+  },
+  "dependencies": {
+    "slug": "^11.0.1"
+  },
+  "devDependencies": {
+    "esbuild": "^0.27.2"
+  }
+}
