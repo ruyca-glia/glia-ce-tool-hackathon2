@@ -1,25 +1,7 @@
 let latestIssues = []; // Global variable for list of issues
 const automationUrl = 'https://api.glia.com/integrations/8c29e917-f94a-4639-bb8d-583882802ec1/endpoint';
-
-
-//Logica para tabla de Tickets - Actions
-// --- 1. MOCK DATA & CONFIG ---
-const MOCK_TICKETS = 3;
-const PRIORITIES = ["High", "Medium", "Low"];
-const LOG_MESSAGES = [
-    "Verifying Jira token... Success",
-    "Fetching provided settings... Success",
-    "Accessing AWS Secrets Vault... Success",
-    "Accessing GVA Chat Adapter... Success",
-    "Updating API key and Secret... Success",
-    "Accessing GVA Core... Success",
-    "Fetching config for glia-phone-gva-uat .... Success",
-    "Updating Site ID and Human queue.... Success",
-    "Refreshing Glia Support Operator API Key... Success",
-    "Posting comment on Jira with success comment... Success",
-    "Resolving Jira Ticket.... Success",
-    "All complete!"
-];
+//Function for user Management
+const auth0UserMgmtUrl = ''
 
 /** Populates the main table with mock ticket data */
 function populateTicketTable(issues) {
@@ -143,12 +125,12 @@ async function handleTriggerClick(button, index) {
             console.log("✅ User found. Updating roles and metadata...");
             button.innerHTML = 'User Found - Updating...';
             // Llamamos a la función de actualización pasando el perfil recibido
-            await triggerUserUpdate(data.profile, index);
+            await triggerUserUpdate(email, data.profile, index);
         } else {
             console.log("⚠️ User not found. Creation in progress");
             button.innerHTML = 'New User - Creating...';
             // Llamamos a la función de creación pasando la info del ticket actual
-            await triggerUserCreation(issue, index);
+            await triggerUserCreation(email, issue, index);
         }
 
     } catch (error) {
@@ -163,14 +145,44 @@ async function handleTriggerClick(button, index) {
  * STUBS: Definimos estas funciones para que no den error al ejecutar
  * Las llenaremos con lógica real en el siguiente paso.
  */
-async function triggerUserUpdate(profile, index) {
-    console.log("Triggering Update for:", profile.email);
-    // Aquí irá la lógica para añadir roles al usuario existente
+async function triggerUserUpdate(email, profile, index) {
+    console.log("Triggering Update for:", email);
+    // Aquí va la lógica para actualizar al usuario existente
+    const glia = await window.getGliaApi({ version: 'v1' });
+    const headers = await glia.getRequestHeaders();
+    headers['Content-Type'] = 'application/json';
+
+    // 1. Llamada a la Glia Function de Automatización (Lookup)
+    const response = await fetch(auth0UserMgmtUrl, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({
+            action: "update"
+        })
+    });
+
+    const data = await response.json();
 }
 
-async function triggerUserCreation(issue, index) {
-    console.log("Triggering Creation for ticket:", issue.key);
-    // Aquí irá la lógica para crear el usuario desde cero en Auth0
+async function triggerUserCreation(email, issue, index) {
+    console.log("Triggering Creation for:", email);
+    // Aquí va la lógica para crear el usuario desde cero en Auth0
+    const glia = await window.getGliaApi({ version: 'v1' });
+    const headers = await glia.getRequestHeaders();
+    headers['Content-Type'] = 'application/json';
+
+    // 1. Llamada a la Glia Function de Automatización (Lookup)
+    const response = await fetch(auth0UserMgmtUrl, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({
+            action: "add",
+            email: email,
+            issue: issue
+        })
+    });
+
+    const data = await response.json();
 }
 
 /** NEW: Enables or disables the Trigger button based on the checkbox state */
