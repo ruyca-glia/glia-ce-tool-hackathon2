@@ -1,7 +1,7 @@
 let latestIssues = []; // Global variable for list of issues
 const automationUrl = 'https://api.glia.com/integrations/8c29e917-f94a-4639-bb8d-583882802ec1/endpoint';
 //Function for user Management
-const auth0UserMgmtUrl = ''
+const auth0UserMgmtUrl = 'https://api.glia.com/integrations/62d4f67f-129c-44b1-9fa7-67822311b09b/endpoint'
 
 /** Populates the main table with mock ticket data */
 function populateTicketTable(issues) {
