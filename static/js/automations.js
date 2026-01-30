@@ -25,8 +25,8 @@ const LOG_MESSAGES = [
 function populateTicketTable(issues) {
     const tableBody = document.getElementById("ticketTableBody");
     if (!tableBody) return; // Guard clause para evitar errores
-    
-    tableBody.innerHTML = ""; 
+
+    tableBody.innerHTML = "";
 
     issues.forEach((issue, index) => {
         const priority = issue.customField !== "N/A" ? issue.customField.split(' - ')[0] : "N/A";
@@ -102,61 +102,75 @@ function handleGoClick(index) {
     ticketRow.parentNode.insertBefore(collapsibleRow, ticketRow.nextSibling);
 }
 
-/** * Triggers the Auth0 call with the users email
+/** * Triggers the Auth0 call and routes to Update or Creation flow
  */
 async function handleTriggerClick(button, index) {
     const issue = latestIssues[index];
     const fullEmailString = issue.formData["User’s Full Name + User Email"] || "";
-    
+
     // Extracting the email from the string "Name - email@glia.com"
-    const email = fullEmailString.includes(" - ") 
-        ? fullEmailString.split(" - ")[1] 
+    const email = fullEmailString.includes(" - ")
+        ? fullEmailString.split(" - ")[1]
         : fullEmailString;
 
-    // UI State
+    // UI State: Indicamos que estamos buscando al usuario
     button.disabled = true;
-    button.innerHTML = 'Invoking... <div class="loader"></div>';
+    button.innerHTML = 'Checking user... <div class="loader"></div>';
 
     try {
-        // 1. Get Glia headers
         const glia = await window.getGliaApi({ version: 'v1' });
         const headers = await glia.getRequestHeaders();
         headers['Content-Type'] = 'application/json';
 
-        // 2. API Call to auth0_retrieveuser function
-        // const response = await fetch(automationUrl, {
-        //     method: 'POST',
-        //     headers: headers,
-        //     body: JSON.stringify({ 
-        //         userEmail: email,
-        //         ticketKey: issue.key,
-        //         botCode: issue.formData["Bot Code"]
-        //     })
-        // });
-
+        // 1. Llamada a la Glia Function de Automatización (Lookup)
         const response = await fetch(automationUrl, {
             method: 'POST',
             headers: headers,
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 userEmail: email
             })
         });
 
-
         const data = await response.json();
 
-        if (response.ok) {
-            // 3. Si la API responde bien, iniciamos la simulación visual de logs
-            console.log(data)
+        if (!response.ok) {
+            throw new Error(data.error || "Error en la comunicación con el servidor");
+        }
+
+        // --- BIFURCACIÓN LÓGICA ---
+
+        if (data.found) {
+            console.log("✅ User found. Updating roles and metadata...");
+            button.innerHTML = 'User Found - Updating...';
+            // Llamamos a la función de actualización pasando el perfil recibido
+            await triggerUserUpdate(data.profile, index);
         } else {
-            throw new Error(data.error || "Fallo en la automatización");
+            console.log("⚠️ User not found. Creation in progress");
+            button.innerHTML = 'New User - Creating...';
+            // Llamamos a la función de creación pasando la info del ticket actual
+            await triggerUserCreation(issue, index);
         }
 
     } catch (error) {
-        console.error("Error detonando automatización:", error);
-        button.innerHTML = 'Error';
-        alert("No se pudo iniciar la automatización: " + error.message);
+        console.error("Error en el flujo de automatización:", error);
+        button.innerHTML = 'Retry';
+        button.disabled = false;
+        alert("Hubo un problema: " + error.message);
     }
+}
+
+/**
+ * STUBS: Definimos estas funciones para que no den error al ejecutar
+ * Las llenaremos con lógica real en el siguiente paso.
+ */
+async function triggerUserUpdate(profile, index) {
+    console.log("Triggering Update for:", profile.email);
+    // Aquí irá la lógica para añadir roles al usuario existente
+}
+
+async function triggerUserCreation(issue, index) {
+    console.log("Triggering Creation for ticket:", issue.key);
+    // Aquí irá la lógica para crear el usuario desde cero en Auth0
 }
 
 /** NEW: Enables or disables the Trigger button based on the checkbox state */
@@ -205,5 +219,5 @@ async function getFunctionResponse() {
 
 document.addEventListener('DOMContentLoaded', () => {
     // Si queremos que cargue apenas entras a la vista de automatización:
-    getFunctionResponse(); 
+    getFunctionResponse();
 });
