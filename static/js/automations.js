@@ -50,6 +50,7 @@ async function getFunctionResponse() {
 
 /** Populates the main table with Jira ticket data */
 function populateTicketTable(issues) {
+    clearActivePanels();
     const tableBody = document.getElementById("ticketTableBody");
     if (!tableBody) return;
 
@@ -154,6 +155,7 @@ async function handleTriggerClick(button, index) {
             button.innerHTML = 'Creating New User...';
             await triggerUserCreation(email, issue, index, button);
         }
+        logOutput("Process complete for: " + issue.key);
 
     } catch (error) {
         console.error("Error in automation flow:", error);
