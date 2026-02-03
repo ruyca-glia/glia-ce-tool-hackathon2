@@ -124,8 +124,8 @@ async function handleTriggerClick(button, index) {
         if (data.found) {
             console.log("✅ User found. Updating roles and metadata...");
             button.innerHTML = 'User Found - Updating...';
-            // Llamamos a la función de actualización pasando el perfil recibido
-            await triggerUserUpdate(email, data.profile, index);
+            // Llamamos a la función de actualización pasando el perfil recibido y la info del ticket actual
+            await triggerUserUpdate(email, data.profile, issue, index);
         } else {
             console.log("⚠️ User not found. Creation in progress");
             button.innerHTML = 'New User - Creating...';
@@ -145,23 +145,27 @@ async function handleTriggerClick(button, index) {
  * STUBS: Definimos estas funciones para que no den error al ejecutar
  * Las llenaremos con lógica real en el siguiente paso.
  */
-async function triggerUserUpdate(email, profile, index) {
+async function triggerUserUpdate(email, profile, issue, index) {
     console.log("Triggering Update for:", email);
     // Aquí va la lógica para actualizar al usuario existente
     const glia = await window.getGliaApi({ version: 'v1' });
     const headers = await glia.getRequestHeaders();
     headers['Content-Type'] = 'application/json';
 
-    // 1. Llamada a la Glia Function de Automatización (Lookup)
+    // Call API - update user
     const response = await fetch(auth0UserMgmtUrl, {
         method: 'POST',
         headers: headers,
         body: JSON.stringify({
-            action: "update"
+            action: "update",
+            email: email,
+            profile: profile,
+            issue: issue
         })
     });
 
     const data = await response.json();
+    console.log(data);
 }
 
 async function triggerUserCreation(email, issue, index) {
@@ -171,7 +175,7 @@ async function triggerUserCreation(email, issue, index) {
     const headers = await glia.getRequestHeaders();
     headers['Content-Type'] = 'application/json';
 
-    // 1. Llamada a la Glia Function de Automatización (Lookup)
+    // Call API - Create -- Add user
     const response = await fetch(auth0UserMgmtUrl, {
         method: 'POST',
         headers: headers,
@@ -183,6 +187,7 @@ async function triggerUserCreation(email, issue, index) {
     });
 
     const data = await response.json();
+    console.log(data);
 }
 
 /** NEW: Enables or disables the Trigger button based on the checkbox state */
