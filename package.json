@@ -1,8 +1,0 @@
-{
-  "dependencies": {
-    "esbuild": "^0.27.2"
-  },
-  "scripts": {
-    "build": "./node_modules/esbuild/bin/esbuild  --bundle --format=esm --outfile=function-out.js --target=es2020 ./static/js/glia-functions/client_offboarding.js"
-  }
-}
