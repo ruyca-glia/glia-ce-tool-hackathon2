@@ -1,6 +1,7 @@
 // ==========================================
 // 1. GLOBAL CONFIGURATION & STATE
 // ==========================================
+const outputConsole = document.getElementById('output');
 let latestIssues = [];
 
 // Glia Function Endpoints
