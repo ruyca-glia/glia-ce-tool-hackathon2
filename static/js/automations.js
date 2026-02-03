@@ -15,6 +15,7 @@ const auth0RoleSyncUrl = 'https://api.glia.com/integrations/1fa17d02-6d91-482a-8
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     // Initial load of Jira tickets
+    clearActivePanels();
     getFunctionResponse();
 });
 
@@ -50,7 +51,6 @@ async function getFunctionResponse() {
 
 /** Populates the main table with Jira ticket data */
 function populateTicketTable(issues) {
-    clearActivePanels();
     const tableBody = document.getElementById("ticketTableBody");
     if (!tableBody) return;
 
@@ -150,13 +150,13 @@ async function handleTriggerClick(button, index) {
             logOutput("✅ User found. Updating roles and metadata...");
             button.innerHTML = 'Updating Existing User...';
             await triggerUserUpdate(email, data.profile, issue, index, button);
+            logOutput("Process complete for: " + issue.key);
         } else {
             logOutput("⚠️ User not found. Starting creation flow...");
             button.innerHTML = 'Creating New User...';
             await triggerUserCreation(email, issue, index, button);
+            logOutput("Process complete for: " + issue.key);
         }
-        logOutput("Process complete for: " + issue.key);
-
     } catch (error) {
         console.error("Error in automation flow:", error);
         button.innerHTML = 'Retry';
