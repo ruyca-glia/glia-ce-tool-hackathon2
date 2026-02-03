@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /** Fetches pending tickets from Jira via Glia Function */
 async function getFunctionResponse() {
-    logOutput("Starting Glia API call to fetch Jira tickets...");
+    logOutput("Starting Glia API call to fetch Jira tickets...", true);
     try {
         const glia = await window.getGliaApi({ version: 'v1' });
         const headers = await glia.getRequestHeaders();
@@ -167,7 +167,7 @@ async function handleTriggerClick(button, index) {
 
 /** FLOW A: Update Existing User */
 async function triggerUserUpdate(email, profile, issue, index, button) {
-    logOutput("Triggering Update for:", email);
+    logOutput("Triggering Update for: " + email, true);
     try {
         const glia = await window.getGliaApi({ version: 'v1' });
         const headers = await glia.getRequestHeaders();
@@ -212,7 +212,7 @@ async function triggerUserUpdate(email, profile, issue, index, button) {
 
 /** FLOW B: Create New User */
 async function triggerUserCreation(email, issue, index, button) {
-    logOutput("Triggering Creation for:", email);
+    logOutput("Triggering Creation for: " + email, true);
     try {
         const glia = await window.getGliaApi({ version: 'v1' });
         const headers = await glia.getRequestHeaders();
