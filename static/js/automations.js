@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /** Fetches pending tickets from Jira via Glia Function */
 async function getFunctionResponse() {
-    console.log("Starting Glia API call to fetch Jira tickets...");
+    logOutput("Starting Glia API call to fetch Jira tickets...");
     try {
         const glia = await window.getGliaApi({ version: 'v1' });
         const headers = await glia.getRequestHeaders();
@@ -34,9 +34,9 @@ async function getFunctionResponse() {
         const result = await response.json();
 
         if (result.success) {
-            latestIssues = result.issues; 
+            latestIssues = result.issues;
             populateTicketTable(latestIssues);
-            console.log("Table successfully updated with Jira data.");
+            logOutput("Table successfully updated with Jira data.");
         }
     } catch (error) {
         console.error("Critical error communicating with Jira API:", error);
@@ -145,11 +145,11 @@ async function handleTriggerClick(button, index) {
 
         // Logic Branching
         if (data.found) {
-            console.log("✅ User found. Updating roles and metadata...");
+            logOutput("✅ User found. Updating roles and metadata...");
             button.innerHTML = 'Updating Existing User...';
             await triggerUserUpdate(email, data.profile, issue, index, button);
         } else {
-            console.log("⚠️ User not found. Starting creation flow...");
+            logOutput("⚠️ User not found. Starting creation flow...");
             button.innerHTML = 'Creating New User...';
             await triggerUserCreation(email, issue, index, button);
         }
@@ -164,7 +164,7 @@ async function handleTriggerClick(button, index) {
 
 /** FLOW A: Update Existing User */
 async function triggerUserUpdate(email, profile, issue, index, button) {
-    console.log("Triggering Update for:", email);
+    logOutput("Triggering Update for:", email);
     try {
         const glia = await window.getGliaApi({ version: 'v1' });
         const headers = await glia.getRequestHeaders();
@@ -179,8 +179,8 @@ async function triggerUserUpdate(email, profile, issue, index, button) {
 
         const data = await response.json();
         console.log(data);
-        console.log("Updated bot codes and Time Zones...");
-        console.log("Updating roles...");
+        logOutput("Updated bot codes and Time Zones...");
+        logOutput("Updating roles...");
 
         // 2. Role Sync
         const roleResponse = await fetch(auth0RoleSyncUrl, {
@@ -195,11 +195,11 @@ async function triggerUserUpdate(email, profile, issue, index, button) {
         const roleData = await roleResponse.json();
 
         if (roleResponse.ok && roleData.success) {
-            console.log("Updated roles successfully");
+            logOutput("Updated roles successfully");
             button.innerHTML = 'Success ✅';
         } else {
-            console.log("Error updating roles...");
-            console.log("Failed executing automation. Report the issue, please.");
+            logOutput("Error updating roles...");
+            logOutput("Failed executing automation. Report the issue, please.");
             button.innerHTML = 'Role Error ❌';
         }
     } catch (err) {
@@ -209,7 +209,7 @@ async function triggerUserUpdate(email, profile, issue, index, button) {
 
 /** FLOW B: Create New User */
 async function triggerUserCreation(email, issue, index, button) {
-    console.log("Triggering Creation for:", email);
+    logOutput("Triggering Creation for:", email);
     try {
         const glia = await window.getGliaApi({ version: 'v1' });
         const headers = await glia.getRequestHeaders();
@@ -224,8 +224,8 @@ async function triggerUserCreation(email, issue, index, button) {
 
         const data = await response.json();
         console.log(data);
-        console.log("Updated bot codes and Time Zones...");
-        console.log("Updating roles...");
+        logOutput("Updated bot codes and Time Zones...");
+        logOutput("Updating roles...");
 
         // 2. Initial Role Assignment
         const roleResponse = await fetch(auth0RoleSyncUrl, {
@@ -240,16 +240,16 @@ async function triggerUserCreation(email, issue, index, button) {
         const roleData = await roleResponse.json();
 
         if (roleResponse.ok && roleData.success) {
-            console.log("Updated roles successfully");
+            logOutput("Updated roles successfully");
             button.innerHTML = 'Success ✅';
             alert(`User Created!\nPassword: ${data.generated_password}`);
         } else {
-            console.log("Error updating roles...");
-            console.log("Failed executing automation. Report the issue, please.");
+            logOutput("Error updating roles...");
+            logOutput("Failed executing automation. Report the issue, please.");
             button.innerHTML = 'Role Error ❌';
         }
     } catch (err) {
-        console.error("Creation process failed:", err);
+        logOutput("Creation process failed:" + err);
     }
 }
 
@@ -268,4 +268,10 @@ function clearActivePanels() {
     if (existingPanel) {
         existingPanel.remove();
     }
+}
+
+// Helper to write to the right-side console
+function logOutput(msg, clear = false) {
+    if (clear) outputConsole.innerText = '';
+    outputConsole.innerText += msg + "\n";
 }
