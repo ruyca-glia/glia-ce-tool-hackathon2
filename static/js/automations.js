@@ -11,15 +11,51 @@ const auth0UserMgmtUrl = 'https://api.glia.com/integrations/62d4f67f-129c-44b1-9
 const auth0RoleSyncUrl = 'https://api.glia.com/integrations/1fa17d02-6d91-482a-8d4d-b8b122345cb7/endpoint';
 
 // ==========================================
-// 2. INITIALIZATION
+// 2. DATA PARSING & BUSINESS RULES (HELPERS)
 // ==========================================
+
+function extractEmails(text) {
+    if (!text) return [];
+    const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(?:com|org|net)/g;
+    return (text.match(emailRegex) || []).map(email => email.toLowerCase().trim());
+}
+
+function calculateUserRoles(email, baseRoles, uatEmails, prodEmails) {
+    let finalRoles = [...baseRoles];
+    const isGlia = email.endsWith('@glia.com');
+
+    if (!isGlia) {
+        finalRoles = finalRoles.filter(role => 
+            !role.includes("internal_customer_success") && 
+            !role.includes("internal_engineering_product")
+        );
+    }
+    if (!uatEmails.includes(email)) finalRoles = finalRoles.filter(role => !role.includes("cms_exporter"));
+    if (!prodEmails.includes(email)) finalRoles = finalRoles.filter(role => !role.includes("cms_publisher"));
+
+    return finalRoles;
+}
+
+function calculateUserMetadata(email, botCodesRaw, timezone) {
+    const isGlia = email.endsWith('@glia.com');
+    const botCodes = botCodesRaw.split(',').map(s => s.trim()).filter(s => s !== "");
+
+    return {
+        clientIds: isGlia ? [] : botCodes,
+        portal: { cms: botCodes },
+        timezone: timezone
+    };
+}
+
+// ==========================================
+// 3. INITIALIZATION & UI RENDERING
+// ==========================================
+
 document.addEventListener('DOMContentLoaded', () => {
-    // Initial load of Jira tickets
     clearActivePanels();
     getFunctionResponse();
 });
 
-/** Fetches pending tickets from Jira via Glia Function */
 async function getFunctionResponse() {
     logOutput("Starting Glia API call to fetch Jira tickets...", true);
     try {
@@ -27,233 +63,144 @@ async function getFunctionResponse() {
         const headers = await glia.getRequestHeaders();
         headers['Content-Type'] = 'application/json';
 
-        const response = await fetch(jiraIssuesUrl, {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify({})
-        });
-
+        const response = await fetch(jiraIssuesUrl, { method: 'POST', headers: headers, body: JSON.stringify({}) });
         const result = await response.json();
-
         if (result.success) {
             latestIssues = result.issues;
             populateTicketTable(latestIssues);
             logOutput("Table successfully updated with Jira data.");
         }
-    } catch (error) {
-        console.error("Critical error communicating with Jira API:", error);
-    }
+    } catch (error) { console.error("Jira fetch error:", error); }
 }
 
-// ==========================================
-// 3. UI RENDERING
-// ==========================================
-
-/** Populates the main table with Jira ticket data */
 function populateTicketTable(issues) {
     const tableBody = document.getElementById("ticketTableBody");
     if (!tableBody) return;
-
     tableBody.innerHTML = "";
-
     issues.forEach((issue, index) => {
         const priority = issue.customField !== "N/A" ? issue.customField.split(' - ')[0] : "N/A";
-        const jiraLink = `https://glia.atlassian.net/browse/${issue.key}`;
-
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td><a href="${jiraLink}" target="_blank" style="font-weight:bold; color:var(--primary);">${issue.key}</a></td>
+            <td><a href="https://glia.atlassian.net/browse/${issue.key}" target="_blank" style="font-weight:bold; color:var(--primary);">${issue.key}</a></td>
             <td>${priority}</td>
             <td>Grant GVA Access</td> 
             <td><span class="badge badge-info">Open</span></td>
-            <td>
-                <button class="btn btn-primary go-button" onclick="handleGoClick(${index})">
-                    GO!
-                </button>
-            </td>
+            <td><button class="btn btn-primary go-button" onclick="handleGoClick(${index})">GO!</button></td>
         `;
         tableBody.appendChild(row);
     });
 }
 
-/** Expands row to show ticket details and trigger button */
 function handleGoClick(index) {
     const issue = latestIssues[index];
     const formData = issue.formData || {};
     clearActivePanels();
-
-    const allButtons = document.querySelectorAll('.go-button');
-    const ticketRow = allButtons[index].closest('tr');
+    const ticketRow = document.querySelectorAll('.go-button')[index].closest('tr');
     const collapsibleRow = document.createElement('tr');
     collapsibleRow.className = 'collapsible-row';
-
-    const rolesHtml = Array.isArray(formData["Roles needed to be added for Auth0"])
-        ? `<ul>${formData["Roles needed to be added for Auth0"].map(r => `<li>${r}</li>`).join('')}</ul>`
-        : "N/A";
+    const masterUsers = extractEmails(formData["User’s Full Name + User Email"]);
 
     collapsibleRow.innerHTML = `
         <td colspan="5">
             <div class="details-container">
                 <div class="details-grid">
                     <dt>Summary</dt><dd>${issue.summary}</dd>
-                    <dt>Bot Code</dt><dd><code>${formData["Bot Code"] || 'N/A'}</code></dd>
-                    <dt>User Email</dt><dd>${formData["User’s Full Name + User Email"] || 'N/A'}</dd>
-                    <dt>Roles</dt><dd>${rolesHtml}</dd>
+                    <dt>Detected Users</dt><dd>${masterUsers.length} users: ${masterUsers.join(', ')}</dd>
                 </div>
-                
                 <div class="approval-container">
-                    <label><input type="checkbox" class="approval-checkbox" onclick="handleApprovalCheck(this)"> Everything looks correct. Proceed.</label>
+                    <label><input type="checkbox" class="approval-checkbox" onclick="handleApprovalCheck(this)"> Verify ${masterUsers.length} users and proceed.</label>
                 </div>
-                
                 <div class="trigger-button-container">
-                    <button class="pure-button purple-button trigger-button" disabled onclick="handleTriggerClick(this, ${index})">
-                        Trigger Automation
-                    </button>
+                    <button class="pure-button purple-button trigger-button" disabled onclick="handleTriggerClick(this, ${index})">Trigger Automation</button>
                 </div>
             </div>
-            <div class="logs-panel"></div>
         </td>
     `;
     ticketRow.parentNode.insertBefore(collapsibleRow, ticketRow.nextSibling);
 }
 
 // ==========================================
-// 4. AUTOMATION LOGIC (CORE)
+// 4. AUTOMATION LOGIC (BATCH ORCHESTRATOR)
 // ==========================================
 
-/** Main Orchestrator: Lookup user and branch to Update or Creation */
 async function handleTriggerClick(button, index) {
     const issue = latestIssues[index];
-    const fullEmailString = issue.formData["User’s Full Name + User Email"] || "";
-    const email = fullEmailString.includes(" - ") ? fullEmailString.split(" - ")[1] : fullEmailString;
+    const formData = issue.formData || {};
+    const masterEmails = extractEmails(formData["User’s Full Name + User Email"]);
+    const uatEmails = extractEmails(formData["Users who should be able to export to UAT"]);
+    const prodEmails = extractEmails(formData["Users who should be able to publish to prod"]);
+    const baseRoles = formData["Roles needed to be added for Auth0"] || [];
+    const botCodes = formData["Bot Code"] || "";
+    const timezone = (Array.isArray(formData["Timezone"]) ? formData["Timezone"][0] : "UTC").split(" for ")[0];
 
     button.disabled = true;
-    button.innerHTML = 'Checking user... <div class="loader"></div>';
+    logOutput(`========================================`, true);
+    logOutput(`🚀 STARTING BATCH PROCESS FOR ${masterEmails.length} USERS`);
+    logOutput(`Ticket: ${issue.key}`);
+    logOutput(`========================================\n`);
 
     try {
         const glia = await window.getGliaApi({ version: 'v1' });
         const headers = await glia.getRequestHeaders();
         headers['Content-Type'] = 'application/json';
 
-        // Step 1: User Lookup
-        const response = await fetch(auth0LookupUrl, {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify({ userEmail: email })
-        });
+        for (let i = 0; i < masterEmails.length; i++) {
+            const email = masterEmails[i];
+            const userNum = i + 1;
+            
+            button.innerHTML = `Processing ${userNum}/${masterEmails.length}...`;
+            logOutput(`[User ${userNum}/${masterEmails.length}] 📧 Email: ${email}`);
 
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || "Server communication error");
+            // 1. Lookup
+            const lookupRes = await fetch(auth0LookupUrl, { method: 'POST', headers, body: JSON.stringify({ userEmail: email }) });
+            const lookupData = await lookupRes.json();
 
-        // Logic Branching
-        if (data.found) {
-            logOutput("✅ User found. Updating roles and metadata...");
-            button.innerHTML = 'Updating Existing User...';
-            await triggerUserUpdate(email, data.profile, issue, index, button);
-            logOutput("Process complete for: " + issue.key);
-        } else {
-            logOutput("⚠️ User not found. Starting creation flow...");
-            button.innerHTML = 'Creating New User...';
-            await triggerUserCreation(email, issue, index, button);
-            logOutput("Process complete for: " + issue.key);
+            // 2. Logic Calculation
+            const userRoles = calculateUserRoles(email, baseRoles, uatEmails, prodEmails);
+            const userMetadata = calculateUserMetadata(email, botCodes, timezone);
+            const userPackage = { email, roles: userRoles, metadata: userMetadata, timezone };
+
+            // 3. Branching
+            if (lookupData.found) {
+                logOutput(`   -> User already exists. Update in progress...`);
+                await triggerUserUpdate(userPackage, lookupData.profile, issue, headers);
+            } else {
+                logOutput(`   -> User does not exist. Creation in progress...`);
+                await triggerUserCreation(userPackage, issue, headers);
+            }
+            
+            logOutput(`   -> ✅ Process completed! Validate the user in Auth0.`);
+            logOutput(`----------------------------------------`);
         }
+
+        button.innerHTML = 'All Complete ✅';
+        logOutput(`\n✨ BATCH JOB FINISHED SUCCESSFULLY`);
     } catch (error) {
-        console.error("Error in automation flow:", error);
+        logOutput(`\n❌ CRITICAL ERROR: ${error.message}`);
         button.innerHTML = 'Retry';
         button.disabled = false;
-        alert("Automation failed: " + error.message);
     }
 }
 
-/** FLOW A: Update Existing User */
-async function triggerUserUpdate(email, profile, issue, index, button) {
-    logOutput("Triggering Update for: " + email, true);
-    try {
-        const glia = await window.getGliaApi({ version: 'v1' });
-        const headers = await glia.getRequestHeaders();
-        headers['Content-Type'] = 'application/json';
+async function triggerUserUpdate(user, profile, issue, headers) {
+    const mgmtRes = await fetch(auth0UserMgmtUrl, { method: 'POST', headers, body: JSON.stringify({ action: "update", user, profile, issue }) });
+    const mgmtData = await mgmtRes.json();
+    logOutput(`   -> Created/Updated Bot Codes and Timezones`);
 
-        // 1. Metadata Sync (Bot codes/TZ)
-        const response = await fetch(auth0UserMgmtUrl, {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify({ action: "update", email, profile, issue })
-        });
-
-        const data = await response.json();
-        console.log(data);
-        logOutput("Updated bot codes and Time Zones...");
-        logOutput("Updating roles...");
-
-        // 2. Role Sync
-        const roleResponse = await fetch(auth0RoleSyncUrl, {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify({
-                userId: profile.user_id,
-                roles: issue.formData["Roles needed to be added for Auth0"]
-            })
-        });
-
-        const roleData = await roleResponse.json();
-
-        if (roleResponse.ok && roleData.success) {
-            logOutput("Updated roles successfully");
-            button.innerHTML = 'Success ✅';
-        } else {
-            logOutput("Error updating roles...");
-            logOutput("Failed executing automation. Report the issue, please.");
-            button.innerHTML = 'Role Error ❌';
-        }
-    } catch (err) {
-        console.error("Update process failed:", err);
-    }
+    logOutput(`   -> Syncing Roles...`);
+    const roleRes = await fetch(auth0RoleSyncUrl, { method: 'POST', headers, body: JSON.stringify({ userId: profile.user_id, roles: user.roles }) });
+    if (roleRes.ok) logOutput(`   -> Roles updated successfully`);
 }
 
-/** FLOW B: Create New User */
-async function triggerUserCreation(email, issue, index, button) {
-    logOutput("Triggering Creation for: " + email, true);
-    try {
-        const glia = await window.getGliaApi({ version: 'v1' });
-        const headers = await glia.getRequestHeaders();
-        headers['Content-Type'] = 'application/json';
+async function triggerUserCreation(user, issue, headers) {
+    const mgmtRes = await fetch(auth0UserMgmtUrl, { method: 'POST', headers, body: JSON.stringify({ action: "add", user, issue }) });
+    const mgmtData = await mgmtRes.json();
+    logOutput(`   -> New account created. Metadata applied.`);
 
-        // 1. Create User via Mgmt Function
-        const response = await fetch(auth0UserMgmtUrl, {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify({ action: "add", email, issue })
-        });
-
-        const data = await response.json();
-        console.log(data);
-        logOutput("Updated bot codes and Time Zones...");
-        logOutput("Updating roles...");
-
-        // 2. Initial Role Assignment
-        const roleResponse = await fetch(auth0RoleSyncUrl, {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify({
-                userId: data.auth0_user_id,
-                roles: issue.formData["Roles needed to be added for Auth0"]
-            })
-        });
-
-        const roleData = await roleResponse.json();
-
-        if (roleResponse.ok && roleData.success) {
-            logOutput("Updated roles successfully");
-            button.innerHTML = 'Success ✅';
-            alert(`User Created!\nPassword: ${data.generated_password}`);
-        } else {
-            logOutput("Error updating roles...");
-            logOutput("Failed executing automation. Report the issue, please.");
-            button.innerHTML = 'Role Error ❌';
-        }
-    } catch (err) {
-        logOutput("Creation process failed:" + err);
-    }
+    logOutput(`   -> Syncing Roles...`);
+    const roleRes = await fetch(auth0RoleSyncUrl, { method: 'POST', headers, body: JSON.stringify({ userId: mgmtData.auth0_user_id, roles: user.roles }) });
+    if (roleRes.ok) logOutput(`   -> Roles assigned successfully`);
+    logOutput(`   -> 🔑 Temporary Password generated for ${user.email}`);
 }
 
 // ==========================================
@@ -261,20 +208,16 @@ async function triggerUserCreation(email, issue, index, button) {
 // ==========================================
 
 function handleApprovalCheck(checkbox) {
-    const container = checkbox.closest('.details-container');
-    const triggerButton = container.querySelector('.trigger-button');
-    triggerButton.disabled = !checkbox.checked;
+    checkbox.closest('.details-container').querySelector('.trigger-button').disabled = !checkbox.checked;
 }
 
 function clearActivePanels() {
     const existingPanel = document.querySelector('.collapsible-row');
-    if (existingPanel) {
-        existingPanel.remove();
-    }
+    if (existingPanel) existingPanel.remove();
 }
 
-// Helper to write to the right-side console
 function logOutput(msg, clear = false) {
     if (clear) outputConsole.innerText = '';
     outputConsole.innerText += msg + "\n";
+    outputConsole.scrollTop = outputConsole.scrollHeight;
 }
