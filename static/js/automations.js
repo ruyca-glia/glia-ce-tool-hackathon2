@@ -70,57 +70,79 @@ async function getFunctionResponse() {
             populateTicketTable(latestIssues);
             logOutput("Table successfully updated with Jira data.");
         }
-    } catch (error) { console.error("Jira fetch error:", error); }
+    } catch (error) { console.error("Critical error communicating with Jira API:", error); }
 }
 
+/** Original Table Structure Restored */
 function populateTicketTable(issues) {
     const tableBody = document.getElementById("ticketTableBody");
     if (!tableBody) return;
+
     tableBody.innerHTML = "";
+
     issues.forEach((issue, index) => {
         const priority = issue.customField !== "N/A" ? issue.customField.split(' - ')[0] : "N/A";
+        const jiraLink = `https://glia.atlassian.net/browse/${issue.key}`;
+
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td><a href="https://glia.atlassian.net/browse/${issue.key}" target="_blank" style="font-weight:bold; color:var(--primary);">${issue.key}</a></td>
+            <td><a href="${jiraLink}" target="_blank" style="font-weight:bold; color:var(--primary);">${issue.key}</a></td>
             <td>${priority}</td>
             <td>Grant GVA Access</td> 
             <td><span class="badge badge-info">Open</span></td>
-            <td><button class="btn btn-primary go-button" onclick="handleGoClick(${index})">GO!</button></td>
+            <td>
+                <button class="btn btn-primary go-button" onclick="handleGoClick(${index})">
+                    GO!
+                </button>
+            </td>
         `;
         tableBody.appendChild(row);
     });
 }
 
+/** Original Panel Structure Restored with Batch Logic */
 function handleGoClick(index) {
     const issue = latestIssues[index];
     const formData = issue.formData || {};
     clearActivePanels();
-    const ticketRow = document.querySelectorAll('.go-button')[index].closest('tr');
+
+    const allButtons = document.querySelectorAll('.go-button');
+    const ticketRow = allButtons[index].closest('tr');
     const collapsibleRow = document.createElement('tr');
     collapsibleRow.className = 'collapsible-row';
-    const masterUsers = extractEmails(formData["User’s Full Name + User Email"]);
+
+    const rolesHtml = Array.isArray(formData["Roles needed to be added for Auth0"])
+        ? `<ul>${formData["Roles needed to be added for Auth0"].map(r => `<li>${r}</li>`).join('')}</ul>`
+        : "N/A";
 
     collapsibleRow.innerHTML = `
         <td colspan="5">
             <div class="details-container">
                 <div class="details-grid">
                     <dt>Summary</dt><dd>${issue.summary}</dd>
-                    <dt>Detected Users</dt><dd>${masterUsers.length} users: ${masterUsers.join(', ')}</dd>
+                    <dt>Bot Code</dt><dd><code>${formData["Bot Code"] || 'N/A'}</code></dd>
+                    <dt>User Email</dt><dd>${formData["User’s Full Name + User Email"] || 'N/A'}</dd>
+                    <dt>Roles</dt><dd>${rolesHtml}</dd>
                 </div>
+                
                 <div class="approval-container">
-                    <label><input type="checkbox" class="approval-checkbox" onclick="handleApprovalCheck(this)"> Verify ${masterUsers.length} users and proceed.</label>
+                    <label><input type="checkbox" class="approval-checkbox" onclick="handleApprovalCheck(this)"> Everything looks correct. Proceed.</label>
                 </div>
+                
                 <div class="trigger-button-container">
-                    <button class="pure-button purple-button trigger-button" disabled onclick="handleTriggerClick(this, ${index})">Trigger Automation</button>
+                    <button class="pure-button purple-button trigger-button" disabled onclick="handleTriggerClick(this, ${index})">
+                        Trigger Automation
+                    </button>
                 </div>
             </div>
+            <div class="logs-panel"></div>
         </td>
     `;
     ticketRow.parentNode.insertBefore(collapsibleRow, ticketRow.nextSibling);
 }
 
 // ==========================================
-// 4. AUTOMATION LOGIC (BATCH ORCHESTRATOR)
+// 4. AUTOMATION LOGIC & SUMMARY TABLE
 // ==========================================
 
 async function handleTriggerClick(button, index) {
@@ -132,6 +154,8 @@ async function handleTriggerClick(button, index) {
     const baseRoles = formData["Roles needed to be added for Auth0"] || [];
     const botCodes = formData["Bot Code"] || "";
     const timezone = (Array.isArray(formData["Timezone"]) ? formData["Timezone"][0] : "UTC").split(" for ")[0];
+
+    const batchSummary = []; // To store results for the final table
 
     button.disabled = true;
     logOutput(`========================================`, true);
@@ -147,6 +171,7 @@ async function handleTriggerClick(button, index) {
         for (let i = 0; i < masterEmails.length; i++) {
             const email = masterEmails[i];
             const userNum = i + 1;
+            let resultEntry = { email, action: "", status: "⌛" };
             
             button.innerHTML = `Processing ${userNum}/${masterEmails.length}...`;
             logOutput(`[User ${userNum}/${masterEmails.length}] 📧 Email: ${email}`);
@@ -163,18 +188,25 @@ async function handleTriggerClick(button, index) {
             // 3. Branching
             if (lookupData.found) {
                 logOutput(`   -> User already exists. Update in progress...`);
+                resultEntry.action = "Update";
                 await triggerUserUpdate(userPackage, lookupData.profile, issue, headers);
             } else {
                 logOutput(`   -> User does not exist. Creation in progress...`);
+                resultEntry.action = "Creation";
                 await triggerUserCreation(userPackage, issue, headers);
             }
             
-            logOutput(`   -> ✅ Process completed! Validate the user in Auth0.`);
+            resultEntry.status = "✅";
+            batchSummary.push(resultEntry);
+
+            logOutput(`   -> ✅ Process completed! Validate the user!`);
             logOutput(`----------------------------------------`);
         }
 
         button.innerHTML = 'All Complete ✅';
-        logOutput(`\n✨ BATCH JOB FINISHED SUCCESSFULLY`);
+        logOutput(`\n✨ BATCH JOB FINISHED`);
+        renderSummaryTable(batchSummary); // Generate the final summary UI
+
     } catch (error) {
         logOutput(`\n❌ CRITICAL ERROR: ${error.message}`);
         button.innerHTML = 'Retry';
@@ -182,25 +214,69 @@ async function handleTriggerClick(button, index) {
     }
 }
 
+/** Renders a clean summary table inside the console */
+function renderSummaryTable(summary) {
+    let tableHtml = `
+    <div style="margin-top: 20px; border-top: 2px solid #fff; padding-top: 10px;">
+        <h4 style="color: #00d1b2;">Automation Summary Report</h4>
+        <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px;">
+            <thead>
+                <tr style="border-bottom: 1px solid #555; text-align: left;">
+                    <th style="padding: 5px;">User</th>
+                    <th style="padding: 5px;">Action</th>
+                    <th style="padding: 5px;">Status</th>
+                </tr>
+            </thead>
+            <tbody>`;
+    
+    summary.forEach(item => {
+        tableHtml += `
+            <tr style="border-bottom: 1px solid #333;">
+                <td style="padding: 5px;">${item.email}</td>
+                <td style="padding: 5px;">${item.action}</td>
+                <td style="padding: 5px; text-align: center;">${item.status}</td>
+            </tr>`;
+    });
+
+    tableHtml += `</tbody></table></div>`;
+    
+    // Inject as HTML into the console
+    const summaryDiv = document.createElement('div');
+    summaryDiv.innerHTML = tableHtml;
+    outputConsole.appendChild(summaryDiv);
+    outputConsole.scrollTop = outputConsole.scrollHeight;
+}
+
 async function triggerUserUpdate(user, profile, issue, headers) {
     const mgmtRes = await fetch(auth0UserMgmtUrl, { method: 'POST', headers, body: JSON.stringify({ action: "update", user, profile, issue }) });
     const mgmtData = await mgmtRes.json();
+    console.log(mgmtData);
     logOutput(`   -> Created/Updated Bot Codes and Timezones`);
 
-    logOutput(`   -> Syncing Roles...`);
+    logOutput(`   -> Updating roles...`);
     const roleRes = await fetch(auth0RoleSyncUrl, { method: 'POST', headers, body: JSON.stringify({ userId: profile.user_id, roles: user.roles }) });
-    if (roleRes.ok) logOutput(`   -> Roles updated successfully`);
+    if (roleRes.ok) {
+        logOutput(`   -> Updated roles successfully`);
+    } else {
+        logOutput(`   -> Error updating roles...`);
+    }
 }
 
 async function triggerUserCreation(user, issue, headers) {
     const mgmtRes = await fetch(auth0UserMgmtUrl, { method: 'POST', headers, body: JSON.stringify({ action: "add", user, issue }) });
     const mgmtData = await mgmtRes.json();
-    logOutput(`   -> New account created. Metadata applied.`);
+    console.log(mgmtData);
+    logOutput(`   -> Created/Updated Bot Codes and Timezones`);
 
-    logOutput(`   -> Syncing Roles...`);
+    logOutput(`   -> Updating roles...`);
     const roleRes = await fetch(auth0RoleSyncUrl, { method: 'POST', headers, body: JSON.stringify({ userId: mgmtData.auth0_user_id, roles: user.roles }) });
-    if (roleRes.ok) logOutput(`   -> Roles assigned successfully`);
-    logOutput(`   -> 🔑 Temporary Password generated for ${user.email}`);
+    if (roleRes.ok) {
+        logOutput(`   -> Updated roles successfully`);
+        // Password only logged for creation for security visibility
+        console.log(`Password for ${user.email}: ${mgmtData.generated_password}`);
+    } else {
+        logOutput(`   -> Error updating roles...`);
+    }
 }
 
 // ==========================================
@@ -208,7 +284,9 @@ async function triggerUserCreation(user, issue, headers) {
 // ==========================================
 
 function handleApprovalCheck(checkbox) {
-    checkbox.closest('.details-container').querySelector('.trigger-button').disabled = !checkbox.checked;
+    const container = checkbox.closest('.details-container');
+    const triggerButton = container.querySelector('.trigger-button');
+    triggerButton.disabled = !checkbox.checked;
 }
 
 function clearActivePanels() {
