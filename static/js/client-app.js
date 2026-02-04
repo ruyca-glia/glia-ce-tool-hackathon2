@@ -71,7 +71,91 @@ document.addEventListener("DOMContentLoaded", () => {
             
             // Enable Run button immediately 
             runBtn.disabled = false;
-        } else {
+
+            // Logic for Client Onboarding 
+        } else if (selectedScript === 'client_onboarding'){
+            dynamicContainer.style.display = 'block';
+
+            // RADIO GROUP 1 
+            const radioGroup1Container = document.createElement('p');
+            radioGroup1Container.style.marginTop = '15px';
+            radioGroup1Container.style.padding = '10px';
+            radioGroup1Container.style.border = '1px solid #ccc';
+            radioGroup1Container.style.borderRadius = "5px";
+
+            const radioGroup1Label = document.createElement('label');
+            radioGroup1Label.innerText = "Select Digital Package"; 
+            radioGroup1Label.style.fontWeight = "bold";
+            radioGroup1Label.style.display = "block";
+            radioGroup1Label.style.marginBottom = "8px";
+            radioGroup1Container.appendChild(radioGroup1Label);
+
+            const group1Options = ["Digital 3", "Digital 5", "Digital 7"];
+            group1Options.forEach((optionText, index) => {
+                const wrapper = document.createElement('div');
+                wrapper.style.display = 'inline-block';
+                wrapper.style.marginRight = "15px;"
+
+                const radioInput = document.createElement('input');
+                radioInput.type = "radio";
+                radioInput.name = "radio_group_1";
+                radioInput.id = `group1_opt${index}`;
+                radioInput.value = optionText.toLowerCase().replace(" ", "-");
+
+                const radioLabel = document.createElement('label');
+                radioLabel.htmlFor = `group1_opt${index}`;
+                radioLabel.innerText = optionText; 
+                radioLabel.style.marginLeft = "5px";
+                radioLabel.style.cursor = "pointer";
+
+                wrapper.appendChild(radioInput);
+                wrapper.appendChild(radioLabel);
+                radioGroup1Container.appendChild(wrapper);
+            });
+
+            // RADIO GROUP 2
+            const radioGroup2Container = document.createElement('div');
+            radioGroup2Container.style.marginTop = '15px';
+            radioGroup2Container.style.padding = '10px';
+            radioGroup2Container.style.border = '1px solid #ccc';
+            radioGroup2Container.style.borderRadius = "5px";
+
+            const radioGroup2Label = document.createElement('label');
+            radioGroup2Label.innerText = "Select Voice Package"; 
+            radioGroup2Label.style.fontWeight = "bold";
+            radioGroup2Label.style.display = "block";
+            radioGroup2Label.style.marginBottom = "8px";
+            radioGroup2Container.appendChild(radioGroup1Label);
+
+            const group2Options = ["Voice 3", "Voice 5", "Voice 7"];
+            group2Options.forEach((optionText, index) => {
+                const wrapper = document.createElement('div');
+
+                wrapper.style.display = 'inline-block';
+                wrapper.style.marginRight = "15px;"
+
+                const radioInput = document.createElement('input');
+                radioInput.type = "radio";
+                radioInput.name = "radio_group_2";
+                radioInput.id = `group2_opt${index}`;
+                radioInput.value = optionText.toLowerCase().replace(" ", "-");
+
+                const radioLabel = document.createElement('label');
+                radioLabel.htmlFor = `group2_opt${index}`;
+                radioLabel.innerText = optionText; 
+                radioLabel.style.marginLeft = "5px";
+                radioLabel.style.cursor = "pointer";
+
+                wrapper.appendChild(radioInput);
+                wrapper.appendChild(radioLabel);
+                radioGroup2Container.appendChild(wrapper);
+            });
+
+            // append to DOM
+            dynamicContainer.appendChild(radioGroup1Container);
+            dynamicContainer.appendChild(radioGroup2Container);
+        }
+        else {
             // For other scripts that don't need input, just enable run
             runBtn.disabled = false;
         }
@@ -118,6 +202,8 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             payload.api_token = apiTokenInput.value.trim();
         }
+
+
 
         try {
             // 1. Initialize Glia
