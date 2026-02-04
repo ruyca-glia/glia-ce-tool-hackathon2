@@ -199,9 +199,14 @@ async function handleTriggerClick(button, index) {
             logOutput(`   -> ✅ Process completed!`);
             logOutput(`----------------------------------------`);
         }
-
+        const copied = await copyToClipboard(innerText);
         button.innerHTML = 'All Complete ✅';
+        if(copied)
+        {
+            logOutput(`\n✨ COPIED RESULTS REPORT TO CLIPBOARD`);
+        }
         logOutput(`\n✨ BATCH JOB FINISHED`);
+        
         renderSummaryTable(batchSummary); 
 
     } catch (error) {
@@ -271,4 +276,15 @@ function logOutput(msg, clear = false) {
     if (clear) outputConsole.innerText = '';
     outputConsole.innerText += msg + "\n";
     outputConsole.scrollTop = outputConsole.scrollHeight;
+}
+
+// Copy to clipboard
+async function copyToClipboard(text){
+    try {
+        await navigator.clipboard.writeText(text);
+        return true;
+    } catch (err) {
+        logOutput("Failed to copy: ", err);
+        return false;
+    }
 }
