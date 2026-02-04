@@ -320,12 +320,25 @@ document.addEventListener("DOMContentLoaded", () => {
             inputToken.required = true;
             inputToken.style.width = "100%";
             inputToken.style.marginTop = "5px";
+            
+            // Create small label with redash link
+            const helpText = document.createElement('small');
+            helpText.style.display = "block"; // Ensures it sits on a new line
+            helpText.style.marginTop = "10px"; // Adds breathing room from the input above
+            helpText.style.color = "#555"; // Optional: Makes it distinct from the main labels
+            
+            // Replace 'YOUR_REDASH_URL_HERE' with the actual link
+            helpText.innerHTML = 'Can\'t find the Glia Support API? Use this <a href="https://redash.glia.com/queries/2913" target="_blank" rel="noopener noreferrer">redash query</a> to find it!';
 
             // Append to DOM
             dynamicContainer.appendChild(label);
             dynamicContainer.appendChild(input);
             dynamicContainer.appendChild(labelToken);
             dynamicContainer.appendChild(inputToken);
+            
+            // Append the new help text at the very end
+            dynamicContainer.appendChild(helpText);
+
             
             // Enable Run button immediately 
             runBtn.disabled = false;
