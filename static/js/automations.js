@@ -3,6 +3,7 @@
 // ==========================================
 const outputConsole = document.getElementById('output');
 let latestIssues = [];
+let finalReport = "";
 
 // Glia Function Endpoints
 const jiraIssuesUrl = 'https://api.glia.com/integrations/709f8159-7814-432c-b5ac-154aef00f456/endpoint';
@@ -199,7 +200,7 @@ async function handleTriggerClick(button, index) {
             logOutput(`   -> ✅ Process completed!`);
             logOutput(`----------------------------------------`);
         }
-        const copied = await copyToClipboard(outputConsole.innerText);
+        const copied = await copyToClipboard(finalReport);
         button.innerHTML = 'All Complete ✅';
         if(copied)
         {
@@ -276,6 +277,18 @@ function logOutput(msg, clear = false) {
     if (clear) outputConsole.innerText = '';
     outputConsole.innerText += msg + "\n";
     outputConsole.scrollTop = outputConsole.scrollHeight;
+    concatTexts(msg);
+}
+
+// Copy to clipboard
+async function concatTexts(text){
+    try {
+        finalReport += text + "\n";
+        return true;
+    } catch (err) {
+        logOutput("Failed to concat text: ", err);
+        return false;
+    }
 }
 
 // Copy to clipboard
