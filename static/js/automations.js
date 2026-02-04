@@ -243,9 +243,9 @@ async function triggerUserUpdate(user, profile, issue, headers) {
     const mgmtData = await mgmtRes.json();
     logOutput(`   -> Metadata merged: ${user.metadata.portal.cms.length} bot(s) total.`);
 
-    logOutput(`   -> Syncing roles...`);
-    const roleRes = await fetch(auth0RoleSyncUrl, { method: 'POST', headers, body: JSON.stringify({ userId: profile.user_id, roles: user.roles }) });
-    if (roleRes.ok) logOutput(`   -> Roles updated successfully`);
+    // logOutput(`   -> Syncing roles...`);
+    // const roleRes = await fetch(auth0RoleSyncUrl, { method: 'POST', headers, body: JSON.stringify({ userId: profile.user_id, roles: user.roles }) });
+    // if (roleRes.ok) logOutput(`   -> Roles updated successfully`);
 }
 
 async function triggerUserCreation(user, issue, headers) {
