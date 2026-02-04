@@ -199,7 +199,7 @@ async function handleTriggerClick(button, index) {
             logOutput(`   -> ✅ Process completed!`);
             logOutput(`----------------------------------------`);
         }
-        const copied = await copyToClipboard(innerText);
+        const copied = await copyToClipboard(outputConsole.innerText);
         button.innerHTML = 'All Complete ✅';
         if(copied)
         {
