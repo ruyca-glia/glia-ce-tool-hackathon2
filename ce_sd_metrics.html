@@ -7,8 +7,10 @@
     <title>Glia CE SD Metrics</title>
     <link rel="stylesheet" href="./static/css/styles.css">
     <link rel="stylesheet" href="./static/css/tool-page.css">
+    <link rel="stylesheet" href="./static/css/ce_sd_metrics.css">
     <script async src="https://api.glia.com/salemove_integration.js"></script>
     <script type="text/javascript" src="//libs.glia.com/axon.js"></script>
+    <script src="./static/js/ce_sd_metrics.js" defer></script>
 </head>
 
 <body>
@@ -32,9 +34,15 @@
             <label for="sheetSelector">Select Spreadsheet:</label>
             <select id="sheetSelector" class="sheet-dropdown">
                 <option value="" disabled selected>Choose a sheet...</option>
-                <option value="https://docs.google.com/spreadsheets/d/1iZ-s2MNn06caVHPTweTGZmZb4Wm6ThWfLzMSCwEfJOs/preview">CE Metrics 1</option>
-                <option value="https://docs.google.com/spreadsheets/d/1a7UcNKAKtH3JQKF2Fo2I2wfi_3mvdfa2351tCJePjkE/preview">CE Metrics 2</option>
-                <option value="https://docs.google.com/spreadsheets/d/1NPMhf3gUXb9ugaPuwla_M72Ald8fFc_gO9ex_Nmd2Dk">CE Metrics 3</option>
+                <option
+                    value="https://docs.google.com/spreadsheets/d/1iZ-s2MNn06caVHPTweTGZmZb4Wm6ThWfLzMSCwEfJOs/preview">
+                    Canada Ticket Metrics</option>
+                <option
+                    value="https://docs.google.com/spreadsheets/d/1a7UcNKAKtH3JQKF2Fo2I2wfi_3mvdfa2351tCJePjkE/preview">
+                    Open Tickets Metrics</option>
+                <option
+                    value="https://docs.google.com/spreadsheets/d/1NPMhf3gUXb9ugaPuwla_M72Ald8fFc_gO9ex_Nmd2Dk/preview">
+                    Escalation Follow Up</option>
             </select>
         </div>
 
@@ -42,12 +50,15 @@
             <div id="frame-placeholder" class="placeholder-text">
                 <p>Please select a metric sheet from the dropdown above to display the data.</p>
             </div>
-            <iframe id="sheetViewer" src="" frameborder="0" style="display: none; width: 100%; height: 700px; border-radius: 8px; border: 1px solid #ddd;"></iframe>
+            <iframe id="sheetViewer" src="" frameborder="0"
+                style="display: none; width: 100%; height: 700px; border-radius: 8px; border: 1px solid #ddd;"></iframe>
         </section>
     </main>
 
     <footer class="footer">
-        <p>Internal Tools v1.0 · For authorized team members only</p>
+        <p>Found an issue with the toolkit? 🧰<br> Report it
+            <a href="https://salemove.slack.com/archives/C0AC1SCTZ62" target="_blank" rel="noopener noreferrer">here</a>
+        </p>
     </footer>
 </body>
 
