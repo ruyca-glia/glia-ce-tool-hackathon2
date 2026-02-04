@@ -470,7 +470,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const jsonString = JSON.stringify(finalConfig, null, 2);
 
             // Copy to clipboard
-            const copied = await copyToClipboard(jsonString);
+            //const copied = await copyToClipboard(jsonString);
 
             if (copied){
                 logOutput("---------------------------");
@@ -557,4 +557,3 @@ document.addEventListener("DOMContentLoaded", () => {
         outputConsole.innerText += msg + "\n";
     }
 });
-
