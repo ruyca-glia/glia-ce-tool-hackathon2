@@ -73,7 +73,6 @@ async function getFunctionResponse() {
     } catch (error) { console.error("Critical error communicating with Jira API:", error); }
 }
 
-/** Original Table Structure Restored */
 function populateTicketTable(issues) {
     const tableBody = document.getElementById("ticketTableBody");
     if (!tableBody) return;
@@ -100,7 +99,6 @@ function populateTicketTable(issues) {
     });
 }
 
-/** Original Panel Structure Restored with Batch Logic */
 function handleGoClick(index) {
     const issue = latestIssues[index];
     const formData = issue.formData || {};
@@ -111,9 +109,18 @@ function handleGoClick(index) {
     const collapsibleRow = document.createElement('tr');
     collapsibleRow.className = 'collapsible-row';
 
+    // Processing Emails for UI display
+    const usersList = extractEmails(formData["User’s Full Name + User Email"]);
+    const usersHtml = usersList.length > 0 
+        ? `<ul>${usersList.map(email => `<li>${email}</li>`).join('')}</ul>` 
+        : "N/A";
+
     const rolesHtml = Array.isArray(formData["Roles needed to be added for Auth0"])
         ? `<ul>${formData["Roles needed to be added for Auth0"].map(r => `<li>${r}</li>`).join('')}</ul>`
         : "N/A";
+    
+    // Mapping Timezone
+    const timezoneDisplay = (Array.isArray(formData["Timezone"]) ? formData["Timezone"][0] : formData["Timezone"]) || "N/A";
 
     collapsibleRow.innerHTML = `
         <td colspan="5">
@@ -121,8 +128,9 @@ function handleGoClick(index) {
                 <div class="details-grid">
                     <dt>Summary</dt><dd>${issue.summary}</dd>
                     <dt>Bot Code</dt><dd><code>${formData["Bot Code"] || 'N/A'}</code></dd>
-                    <dt>User Email</dt><dd>${formData["User’s Full Name + User Email"] || 'N/A'}</dd>
+                    <dt>Users Found</dt><dd>${usersHtml}</dd>
                     <dt>Roles</dt><dd>${rolesHtml}</dd>
+                    <dt>Timezone</dt><dd>${timezoneDisplay}</dd>
                 </div>
                 
                 <div class="approval-container">
@@ -155,7 +163,7 @@ async function handleTriggerClick(button, index) {
     const botCodes = formData["Bot Code"] || "";
     const timezone = (Array.isArray(formData["Timezone"]) ? formData["Timezone"][0] : "UTC").split(" for ")[0];
 
-    const batchSummary = []; // To store results for the final table
+    const batchSummary = []; 
 
     button.disabled = true;
     logOutput(`========================================`, true);
@@ -176,16 +184,13 @@ async function handleTriggerClick(button, index) {
             button.innerHTML = `Processing ${userNum}/${masterEmails.length}...`;
             logOutput(`[User ${userNum}/${masterEmails.length}] 📧 Email: ${email}`);
 
-            // 1. Lookup
             const lookupRes = await fetch(auth0LookupUrl, { method: 'POST', headers, body: JSON.stringify({ userEmail: email }) });
             const lookupData = await lookupRes.json();
 
-            // 2. Logic Calculation
             const userRoles = calculateUserRoles(email, baseRoles, uatEmails, prodEmails);
             const userMetadata = calculateUserMetadata(email, botCodes, timezone);
             const userPackage = { email, roles: userRoles, metadata: userMetadata, timezone };
 
-            // 3. Branching
             if (lookupData.found) {
                 logOutput(`   -> User already exists. Update in progress...`);
                 resultEntry.action = "Update";
@@ -205,7 +210,7 @@ async function handleTriggerClick(button, index) {
 
         button.innerHTML = 'All Complete ✅';
         logOutput(`\n✨ BATCH JOB FINISHED`);
-        renderSummaryTable(batchSummary); // Generate the final summary UI
+        renderSummaryTable(batchSummary); 
 
     } catch (error) {
         logOutput(`\n❌ CRITICAL ERROR: ${error.message}`);
@@ -214,7 +219,6 @@ async function handleTriggerClick(button, index) {
     }
 }
 
-/** Renders a clean summary table inside the console */
 function renderSummaryTable(summary) {
     let tableHtml = `
     <div style="margin-top: 20px; border-top: 2px solid #fff; padding-top: 10px;">
@@ -240,7 +244,6 @@ function renderSummaryTable(summary) {
 
     tableHtml += `</tbody></table></div>`;
     
-    // Inject as HTML into the console
     const summaryDiv = document.createElement('div');
     summaryDiv.innerHTML = tableHtml;
     outputConsole.appendChild(summaryDiv);
@@ -272,7 +275,6 @@ async function triggerUserCreation(user, issue, headers) {
     const roleRes = await fetch(auth0RoleSyncUrl, { method: 'POST', headers, body: JSON.stringify({ userId: mgmtData.auth0_user_id, roles: user.roles }) });
     if (roleRes.ok) {
         logOutput(`   -> Updated roles successfully`);
-        // Password only logged for creation for security visibility
         console.log(`Password for ${user.email}: ${mgmtData.generated_password}`);
     } else {
         logOutput(`   -> Error updating roles...`);
