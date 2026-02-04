@@ -36,13 +36,23 @@ function calculateUserRoles(email, baseRoles, uatEmails, prodEmails) {
     return finalRoles;
 }
 
-function calculateUserMetadata(email, botCodesRaw, timezone) {
+/** * MERGE LOGIC: Combines existing Auth0 metadata with new Jira Bot Codes
+ */
+function calculateUserMetadata(email, botCodesRaw, timezone, existingProfile = null) {
     const isGlia = email.endsWith('@glia.com');
-    const botCodes = botCodesRaw.split(',').map(s => s.trim()).filter(s => s !== "");
+    const newCodes = botCodesRaw.split(',').map(s => s.trim()).filter(s => s !== "");
+
+    // Get existing data if available
+    const existingClientIds = existingProfile?.user_metadata?.clientIds || [];
+    const existingCmsIds = existingProfile?.user_metadata?.portal?.cms || [];
+
+    // Merge using Set to ensure uniqueness
+    const mergedClientIds = [...new Set([...existingClientIds, ...newCodes])];
+    const mergedCmsIds = [...new Set([...existingCmsIds, ...newCodes])];
 
     return {
-        clientIds: isGlia ? [] : botCodes,
-        portal: { cms: botCodes },
+        clientIds: isGlia ? [] : mergedClientIds,
+        portal: { cms: mergedCmsIds },
         timezone: timezone
     };
 }
@@ -76,24 +86,17 @@ async function getFunctionResponse() {
 function populateTicketTable(issues) {
     const tableBody = document.getElementById("ticketTableBody");
     if (!tableBody) return;
-
     tableBody.innerHTML = "";
-
     issues.forEach((issue, index) => {
         const priority = issue.customField !== "N/A" ? issue.customField.split(' - ')[0] : "N/A";
         const jiraLink = `https://glia.atlassian.net/browse/${issue.key}`;
-
         const row = document.createElement('tr');
         row.innerHTML = `
             <td><a href="${jiraLink}" target="_blank" style="font-weight:bold; color:var(--primary);">${issue.key}</a></td>
             <td>${priority}</td>
             <td>Grant GVA Access</td> 
             <td><span class="badge badge-info">Open</span></td>
-            <td>
-                <button class="btn btn-primary go-button" onclick="handleGoClick(${index})">
-                    GO!
-                </button>
-            </td>
+            <td><button class="btn btn-primary go-button" onclick="handleGoClick(${index})">GO!</button></td>
         `;
         tableBody.appendChild(row);
     });
@@ -109,17 +112,10 @@ function handleGoClick(index) {
     const collapsibleRow = document.createElement('tr');
     collapsibleRow.className = 'collapsible-row';
 
-    // Processing Emails for UI display
     const usersList = extractEmails(formData["User’s Full Name + User Email"]);
-    const usersHtml = usersList.length > 0 
-        ? `<ul>${usersList.map(email => `<li>${email}</li>`).join('')}</ul>` 
-        : "N/A";
-
+    const usersHtml = usersList.length > 0 ? `<ul>${usersList.map(email => `<li>${email}</li>`).join('')}</ul>` : "N/A";
     const rolesHtml = Array.isArray(formData["Roles needed to be added for Auth0"])
-        ? `<ul>${formData["Roles needed to be added for Auth0"].map(r => `<li>${r}</li>`).join('')}</ul>`
-        : "N/A";
-    
-    // Mapping Timezone
+        ? `<ul>${formData["Roles needed to be added for Auth0"].map(r => `<li>${r}</li>`).join('')}</ul>` : "N/A";
     const timezoneDisplay = (Array.isArray(formData["Timezone"]) ? formData["Timezone"][0] : formData["Timezone"]) || "N/A";
 
     collapsibleRow.innerHTML = `
@@ -132,15 +128,11 @@ function handleGoClick(index) {
                     <dt>Roles</dt><dd>${rolesHtml}</dd>
                     <dt>Timezone</dt><dd>${timezoneDisplay}</dd>
                 </div>
-                
                 <div class="approval-container">
                     <label><input type="checkbox" class="approval-checkbox" onclick="handleApprovalCheck(this)"> Everything looks correct. Proceed.</label>
                 </div>
-                
                 <div class="trigger-button-container">
-                    <button class="pure-button purple-button trigger-button" disabled onclick="handleTriggerClick(this, ${index})">
-                        Trigger Automation
-                    </button>
+                    <button class="pure-button purple-button trigger-button" disabled onclick="handleTriggerClick(this, ${index})">Trigger Automation</button>
                 </div>
             </div>
             <div class="logs-panel"></div>
@@ -164,7 +156,6 @@ async function handleTriggerClick(button, index) {
     const timezone = (Array.isArray(formData["Timezone"]) ? formData["Timezone"][0] : "UTC").split(" for ")[0];
 
     const batchSummary = []; 
-
     button.disabled = true;
     logOutput(`========================================`, true);
     logOutput(`🚀 STARTING BATCH PROCESS FOR ${masterEmails.length} USERS`);
@@ -187,24 +178,25 @@ async function handleTriggerClick(button, index) {
             const lookupRes = await fetch(auth0LookupUrl, { method: 'POST', headers, body: JSON.stringify({ userEmail: email }) });
             const lookupData = await lookupRes.json();
 
+            // CALCULATION STEP: Merge metadata if profile exists
             const userRoles = calculateUserRoles(email, baseRoles, uatEmails, prodEmails);
-            const userMetadata = calculateUserMetadata(email, botCodes, timezone);
+            const userMetadata = calculateUserMetadata(email, botCodes, timezone, lookupData.found ? lookupData.profile : null);
+            
             const userPackage = { email, roles: userRoles, metadata: userMetadata, timezone };
 
             if (lookupData.found) {
-                logOutput(`   -> User already exists. Update in progress...`);
+                logOutput(`   -> User already exists. Merging metadata...`);
                 resultEntry.action = "Update";
                 await triggerUserUpdate(userPackage, lookupData.profile, issue, headers);
             } else {
-                logOutput(`   -> User does not exist. Creation in progress...`);
+                logOutput(`   -> User does not exist. Creating profile...`);
                 resultEntry.action = "Creation";
                 await triggerUserCreation(userPackage, issue, headers);
             }
             
             resultEntry.status = "✅";
             batchSummary.push(resultEntry);
-
-            logOutput(`   -> ✅ Process completed! Validate the user!`);
+            logOutput(`   -> ✅ Process completed!`);
             logOutput(`----------------------------------------`);
         }
 
@@ -226,24 +218,14 @@ function renderSummaryTable(summary) {
         <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px;">
             <thead>
                 <tr style="border-bottom: 1px solid #555; text-align: left;">
-                    <th style="padding: 5px;">User</th>
-                    <th style="padding: 5px;">Action</th>
-                    <th style="padding: 5px;">Status</th>
+                    <th style="padding: 5px;">User</th><th style="padding: 5px;">Action</th><th style="padding: 5px;">Status</th>
                 </tr>
             </thead>
             <tbody>`;
-    
     summary.forEach(item => {
-        tableHtml += `
-            <tr style="border-bottom: 1px solid #333;">
-                <td style="padding: 5px;">${item.email}</td>
-                <td style="padding: 5px;">${item.action}</td>
-                <td style="padding: 5px; text-align: center;">${item.status}</td>
-            </tr>`;
+        tableHtml += `<tr style="border-bottom: 1px solid #333;"><td style="padding: 5px;">${item.email}</td><td style="padding: 5px;">${item.action}</td><td style="padding: 5px; text-align: center;">${item.status}</td></tr>`;
     });
-
     tableHtml += `</tbody></table></div>`;
-    
     const summaryDiv = document.createElement('div');
     summaryDiv.innerHTML = tableHtml;
     outputConsole.appendChild(summaryDiv);
@@ -253,32 +235,21 @@ function renderSummaryTable(summary) {
 async function triggerUserUpdate(user, profile, issue, headers) {
     const mgmtRes = await fetch(auth0UserMgmtUrl, { method: 'POST', headers, body: JSON.stringify({ action: "update", user, profile, issue }) });
     const mgmtData = await mgmtRes.json();
-    console.log(mgmtData);
-    logOutput(`   -> Created/Updated Bot Codes and Timezones`);
+    logOutput(`   -> Metadata merged: ${user.metadata.portal.cms.length} bot(s) total.`);
 
-    logOutput(`   -> Updating roles...`);
+    logOutput(`   -> Syncing roles...`);
     const roleRes = await fetch(auth0RoleSyncUrl, { method: 'POST', headers, body: JSON.stringify({ userId: profile.user_id, roles: user.roles }) });
-    if (roleRes.ok) {
-        logOutput(`   -> Updated roles successfully`);
-    } else {
-        logOutput(`   -> Error updating roles...`);
-    }
+    if (roleRes.ok) logOutput(`   -> Roles updated successfully`);
 }
 
 async function triggerUserCreation(user, issue, headers) {
     const mgmtRes = await fetch(auth0UserMgmtUrl, { method: 'POST', headers, body: JSON.stringify({ action: "add", user, issue }) });
     const mgmtData = await mgmtRes.json();
-    console.log(mgmtData);
-    logOutput(`   -> Created/Updated Bot Codes and Timezones`);
+    logOutput(`   -> Metadata applied: ${user.metadata.portal.cms.join(', ')}`);
 
-    logOutput(`   -> Updating roles...`);
+    logOutput(`   -> Syncing roles...`);
     const roleRes = await fetch(auth0RoleSyncUrl, { method: 'POST', headers, body: JSON.stringify({ userId: mgmtData.auth0_user_id, roles: user.roles }) });
-    if (roleRes.ok) {
-        logOutput(`   -> Updated roles successfully`);
-        console.log(`Password for ${user.email}: ${mgmtData.generated_password}`);
-    } else {
-        logOutput(`   -> Error updating roles...`);
-    }
+    if (roleRes.ok) logOutput(`   -> Roles assigned successfully`);
 }
 
 // ==========================================
