@@ -485,16 +485,14 @@ document.addEventListener("DOMContentLoaded", () => {
             // Copy to clipboard
             //const copied = await copyToClipboard(jsonString);
 
-            if (copied){
-                logOutput("---------------------------");
-                logOutput("SUCCESS: JSON configurtion copied to clipboard");
-                logOutput("---------------------------");
-                logOutput("Configuration preview:");
-                logOutput(jsonString);
-            } else {
-                logOutput("ERROR: Failed to copy to clipboard. Here's the JSON");
-                logOutput(jsonString);
-            }
+            // --- FIX START ---
+            // Clipboard logic removed to support iFrame compatibility.
+            // Directly logging output to the custom console function.
+            logOutput("---------------------------");
+            logOutput("SUCCESS: Configuration generated:");
+            logOutput("---------------------------");
+            logOutput(jsonString);
+            // --- FIX END ---
 
             return; // Do not proceed to API call
         }
