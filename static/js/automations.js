@@ -296,3 +296,48 @@ async function copyToClipboard(text){
         return false;
     }
 }
+
+function renderTickets(tickets) {
+    const tbody = document.getElementById('ticketTableBody');
+    tbody.innerHTML = ''; 
+
+    tickets.forEach(ticket => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${ticket.id}</td>
+            <td>${ticket.priority}</td>
+            <td>${ticket.type}</td>
+            <td>${ticket.status}</td>
+            <td>
+                <button class="btn btn-small view-toggle-btn" onclick="toggleDetails(this)">View More</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+
+        const detailsTr = document.createElement('tr');
+        detailsTr.className = 'ticket-details-row';
+        detailsTr.style.display = 'none';
+        detailsTr.innerHTML = `
+            <td colspan="5" style="background-color: #f8f9fa; padding: 15px; border-left: 3px solid #6c5ce7;">
+                <strong>Extended Details:</strong><br>
+                Payload information, emails, bot codes, etc. will be rendered here.
+            </td>
+        `;
+        tbody.appendChild(detailsTr);
+    });
+}
+
+window.toggleDetails = function(button) {
+    const currentRow = button.closest('tr');
+    const detailsRow = currentRow.nextElementSibling; 
+
+    if (detailsRow.style.display === 'none') {
+        detailsRow.style.display = 'table-row';
+        button.textContent = 'View Less';
+        button.classList.add('btn-active'); 
+    } else {
+        detailsRow.style.display = 'none';
+        button.textContent = 'View More';
+        button.classList.remove('btn-active');
+    }
+};
