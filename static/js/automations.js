@@ -5,7 +5,7 @@ const outputConsole = document.getElementById('output');
 let latestIssues = [];
 let finalReport = "";
 
-// Glia Function Endpoints
+// Glia Function Invoke Endpoints
 const jiraIssuesUrl = 'https://api.glia.com/integrations/ad44ca10-a612-4a32-97b1-173bb719618e/endpoint';
 const auth0LookupUrl = 'https://api.glia.com/integrations/8c29e917-f94a-4639-bb8d-583882802ec1/endpoint';
 const auth0UserMgmtUrl = 'https://api.glia.com/integrations/62d4f67f-129c-44b1-9fa7-67822311b09b/endpoint';
@@ -96,7 +96,7 @@ function populateTicketTable(issues) {
             <td><a href="${jiraLink}" target="_blank" style="font-weight:bold; color:var(--primary);">${issue.key}</a></td>
             <td>${priority}</td>
             <td>Grant GVA Access</td> 
-            <td><span class="badge badge-info">Open</span></td>
+            <td><span class="badge badge-info">${issue.status}</span></td>
             <td><button class="btn btn-primary go-button" onclick="handleGoClick(${index})">GO!</button></td>
         `;
         tableBody.appendChild(row);
@@ -200,13 +200,8 @@ async function handleTriggerClick(button, index) {
             logOutput(`   -> ✅ Process completed!`);
             logOutput(`----------------------------------------`);
         }
-        const copied = await copyToClipboard(finalReport);
-        button.innerHTML = 'All Complete ✅';
-        if(copied)
-        {
-            logOutput(`\n✨ COPIED RESULTS REPORT TO CLIPBOARD`);
-        }
-        logOutput(`\n✨ BATCH JOB FINISHED`);
+        
+        logOutput(`\nBATCH JOB FINISHED`);
         
         renderSummaryTable(batchSummary); 
 
