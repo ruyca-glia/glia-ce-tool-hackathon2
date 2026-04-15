@@ -96,8 +96,8 @@ function populateTicketTable(issues) {
             <td><a href="${jiraLink}" target="_blank" style="font-weight:bold; color:var(--primary);">${issue.key}</a></td>
             <td>${priority}</td>
             <td>Grant GVA Access</td> 
-            <td><span class="badge badge-info">${issue.status}</span></td>
-            <td><button class="btn btn-primary go-button" onclick="handleGoClick(${index})">GO!</button></td>
+            <td><span class="badge badge-info">Open</span></td>
+            <td><button class="btn btn-primary go-button" onclick="handleGoClick(${index})">View More</button></td>
         `;
         tableBody.appendChild(row);
     });

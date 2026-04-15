@@ -13,59 +13,58 @@
     <script src="./static/js/automations.js" defer></script>
 </head>
 
-<!-- Ticket Automation View: Main View Ticket Automation -->
-<header class="header">
-    <div class="header-content">
-        <a href="./index.html" class="back-link">← Back to Dashboard</a>
-        <span class="team-badge">Team Dashboard</span>
-    </div>
-</header>
-
-<main class="container">
-    <div class="tool-header">
-        <div class="tool-icon-large">🤖</div>
-        <div>
-            <h1>Ticket Automation</h1>
-            <p>Automated request execution</p>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="./index.html" class="back-link">← Back to Dashboard</a>
+            <span class="team-badge">Team Dashboard</span>
         </div>
-    </div>
+    </header>
 
-    <div class="tool-layout">
-        <!-- Script Selection Panel -->
-        <section class="autopanel">
-            <h2>Requests to complete</h2>
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Ticket</th>
-                        <th>Priority</th>
-                        <th>Request Type</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="ticketTableBody">
-                </tbody>
-            </table>
-        </section>
-
-        <!-- Output Panel -->
-        <section class="panel">
-            <h2>Output</h2>
-            <div class="output-container">
-                <div class="output-header">
-                    <span class="output-status">Ready</span>
-                    <button class="btn btn-small" id="clear-output">Clear</button>
-                </div>
-                <pre class="output-console"
-                    id="output">Waiting for script execution... Select a script and click "Run Script" to begin.</pre>
+    <main class="container">
+        <div class="tool-header">
+            <div class="tool-icon-large">🤖</div>
+            <div>
+                <h1>Ticket Automation</h1>
+                <p>Automated request execution</p>
             </div>
-        </section>
-    </div>
-</main>
+        </div>
 
-<footer class="footer">
-    <p>Internal Tools v1.0 · For authorized team members only</p>
-</footer>
+        <div class="tool-layout">
+            <section class="autopanel">
+                <h2>Requests to complete</h2>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Ticket</th>
+                            <th>Priority</th>
+                            <th>Request Type</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ticketTableBody">
+                    </tbody>
+                </table>
+            </section>
+
+            <section class="panel">
+                <h2>Output</h2>
+                <div class="output-container">
+                    <div class="output-header">
+                        <span class="output-status">Ready</span>
+                        <button class="btn btn-small" id="clear-output">Clear</button>
+                    </div>
+                    <pre class="output-console"
+                        id="output">Waiting for script execution... Select a script and click "Run Script" to begin.</pre>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>Internal Tools v1.0 · For authorized team members only</p>
+    </footer>
+</body>
 
 </html>
