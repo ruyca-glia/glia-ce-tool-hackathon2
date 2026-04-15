@@ -6,7 +6,7 @@ let latestIssues = [];
 let finalReport = "";
 
 // Glia Function Endpoints
-const jiraIssuesUrl = 'https://api.glia.com/integrations/709f8159-7814-432c-b5ac-154aef00f456/endpoint';
+const jiraIssuesUrl = 'https://api.glia.com/integrations/ad44ca10-a612-4a32-97b1-173bb719618e/endpoint';
 const auth0LookupUrl = 'https://api.glia.com/integrations/8c29e917-f94a-4639-bb8d-583882802ec1/endpoint';
 const auth0UserMgmtUrl = 'https://api.glia.com/integrations/62d4f67f-129c-44b1-9fa7-67822311b09b/endpoint';
 const auth0RoleSyncUrl = 'https://api.glia.com/integrations/1fa17d02-6d91-482a-8d4d-b8b122345cb7/endpoint';
