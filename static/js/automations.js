@@ -17,7 +17,7 @@ const auth0RoleSyncUrl = 'https://api.glia.com/integrations/1fa17d02-6d91-482a-8
 
 function extractEmails(text) {
     if (!text) return [];
-    const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(?:com|org|net)/g;
+    const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(?:com|org|net|bank)/g;
     return (text.match(emailRegex) || []).map(email => email.toLowerCase().trim());
 }
 
