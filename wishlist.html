@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feature Wishlist - CE Tools</title>
+    <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+
+    <header class="header">
+        <div class="header-content">
+            <h1>Feature Wishlist</h1>
+            <span class="team-badge">CE Tools</span>
+        </div>
+    </header>
+
+    <main class="container">
+        
+        <section class="content-section">
+            <h2>Top Requested Features</h2>
+            <div class="wishlist-table-wrapper">
+                <table class="wishlist-table">
+                    <thead>
+                        <tr>
+                            <th>Votes</th>
+                            <th>Title</th>
+                            <th>Description</th>
+                            <th>Creator</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="vote-badge">124</span></td>
+                            <td>Automated Ticket Routing</td>
+                            <td>Automatically assign incoming tickets based on keyword triggers.</td>
+                            <td>Nico</td>
+                        </tr>
+                        <tr>
+                            <td><span class="vote-badge">89</span></td>
+                            <td>Dark Mode Interface</td>
+                            <td>Add a toggle to switch the entire tool suite into dark mode for night shifts.</td>
+                            <td>Sammi</td>
+                        </tr>
+                        <tr>
+                            <td><span class="vote-badge">56</span></td>
+                            <td>Bulk Status Update</td>
+                            <td>Allow users to select multiple rows and change their status to 'Resolved' at once.</td>
+                            <td>Gerardo</td>
+                        </tr>
+                        <tr>
+                            <td><span class="vote-badge">42</span></td>
+                            <td>Slack Notifications</td>
+                            <td>Send a direct Slack ping to the assigned agent when a P1 ticket arrives.</td>
+                            <td>Carlos</td>
+                        </tr>
+                        <tr>
+                            <td><span class="vote-badge">18</span></td>
+                            <td>Weekly Analytics Export</td>
+                            <td>Add a button to export resolution metrics to a CSV file.</td>
+                            <td>Ahoura</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="content-section">
+            <h2>Submit a New Feature</h2>
+            <form action="#" method="POST" onsubmit="event.preventDefault(); alert('Submission mock complete!');">
+                <div class="form-group">
+                    <label for="feature-title">Title of Request</label>
+                    <input type="text" id="feature-title" class="form-control" placeholder="E.g., Custom User Macros" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="feature-desc">Short Description</label>
+                    <textarea id="feature-desc" class="form-control" rows="3" placeholder="Briefly describe what this feature should do..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="feature-creator">Who is creating this request?</label>
+                    <select id="feature-creator" class="form-control" required>
+                        <option value="" disabled selected>Select your name...</option>
+                        <option value="Ahoura">Ahoura</option>
+                        <option value="Carlos">Carlos</option>
+                        <option value="Gerardo">Gerardo</option>
+                        <option value="Nico">Nico</option>
+                        <option value="Sammi">Sammi</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-submit">Submit Request</button>
+            </form>
+        </section>
+
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2026 CE Tools Team. Internal Use Only.</p>
+    </footer>
+
+</body>
+</html>

@@ -2,12 +2,11 @@ import requests
 import random
 import os 
 import string
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 
-load_dotenv()
 
-bearer_token = os.getenv("BEARER_TOKEN")
-SITE_ID = "e5a4e380-ec89-41d9-a3d2-5a385b0a4aed"
+bearer_token = ""
+SITE_ID = "c22b8312-3782-4020-b30b-066d9d191c70"
 
 
 NAMES = [

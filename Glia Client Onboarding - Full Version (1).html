@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<!-- saved from url=(0087)file:///Users/glia/Library/Mobile%20Documents/com~apple~TextEdit/Documents/hack2-2.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glia Client Onboarding - Full Version</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .form-container {
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding: 25px;
+            border: 2px solid #f1f5f9;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+
+        .section h2 {
+            color: #1e293b;
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin: 0;
+        }
+
+        .checkbox-group label {
+            margin-bottom: 0;
+            font-weight: 500;
+        }
+
+        .user-entry {
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 15px;
+            background: white;
+            position: relative;
+        }
+
+        .add-user-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .add-user-btn:hover {
+            background: #059669;
+        }
+
+        .remove-user-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+
+        .remove-user-btn:hover {
+            background: #dc2626;
+        }
+
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .feature-item {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .phone-config {
+            background: #f0f9ff;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #bae6fd;
+            margin-top: 15px;
+        }
+
+        .phone-config h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #1e40af;
+            font-size: 1.1rem;
+        }
+
+        .onboard-btn {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            padding: 16px 40px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .onboard-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
+        }
+
+        .onboard-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .demo-output {
+            margin-top: 30px;
+            padding: 25px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border-left: 4px solid #4f46e5;
+        }
+
+        .demo-output h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #1e293b;
+            font-size: 1.2rem;
+        }
+
+        .demo-output pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 13px;
+            white-space: pre-wrap;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .form-container {
+                padding: 20px;
+            }
+
+            .feature-list {
+                grid-template-columns: 1fr;
+            }
+
+            .section {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Glia Client Onboarding</h1>
+            <p>Complete client setup with all features and configurations</p>
+        </div>
+
+        <div class="form-container">
+            <form id="onboardingForm">
+                <!-- Account Information -->
+                <div class="section">
+                    <h2><span>🏢</span> Account Information</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="accountName">Account Name *</label>
+                            <input type="text" id="accountName" required="" placeholder="e.g., Acme Corporation" value="Acme Corporation">
+                        </div>
+                        <div class="form-group">
+                            <label for="accountType">Account Type *</label>
+                            <select id="accountType" required="">
+                                <option value="enterprise" selected="">Enterprise</option>
+                                <option value="business">Business</option>
+                                <option value="startup">Startup</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="accountDomain">Account Domain *</label>
+                        <input type="text" id="accountDomain" required="" placeholder="e.g., acmecorp.com" value="acmecorp.com">
+                    </div>
+                </div>
+
+                <!-- Site Information -->
+                <div class="section">
+                    <h2><span>🌐</span> Site Information</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="siteName">Site Name *</label>
+                            <input type="text" id="siteName" required="" placeholder="e.g., Acme Main Site" value="Acme Main Site">
+                        </div>
+                        <div class="form-group">
+                            <label for="siteDomain">Site Domain *</label>
+                            <input type="text" id="siteDomain" required="" placeholder="e.g., www.acmecorp.com" value="www.acmecorp.com">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="timezone">Timezone</label>
+                            <select id="timezone">
+                                <option value="America/New_York" selected="">Eastern Time</option>
+                                <option value="America/Chicago">Central Time</option>
+                                <option value="America/Denver">Mountain Time</option>
+                                <option value="America/Los_Angeles">Pacific Time</option>
+                                <option value="UTC">UTC</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="language">Language</label>
+                            <select id="language">
+                                <option value="en" selected="">English</option>
+                                <option value="es">Spanish</option>
+                                <option value="fr">French</option>
+                                <option value="de">German</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="templateSiteId">Template Site ID (Optional)</label>
+                        <input type="text" id="templateSiteId" placeholder="Leave blank for default template">
+                    </div>
+                </div>
+
+                <!-- Users -->
+                <div class="section">
+                    <h2><span>👥</span> Users</h2>
+                    <div id="usersContainer">
+                        <div class="user-entry">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Email *</label>
+                                    <input type="email" name="userEmail[]" required="" placeholder="admin@acmecorp.com" value="admin@acmecorp.com">
+                                </div>
+                                <div class="form-group">
+                                    <label>Role *</label>
+                                    <select name="userRole[]" required="">
+                                        <option value="admin" selected="">Admin</option>
+                                        <option value="agent">Agent</option>
+                                        <option value="supervisor">Supervisor</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>First Name *</label>
+                                    <input type="text" name="userFirstName[]" required="" placeholder="John" value="John">
+                                </div>
+                                <div class="form-group">
+                                    <label>Last Name *</label>
+                                    <input type="text" name="userLastName[]" required="" placeholder="Doe" value="Doe">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="add-user-btn" onclick="addUser()">
+                        + Add Another User
+                    </button>
+                </div>
+
+                <!-- Features & Configuration -->
+                <div class="section">
+                    <h2><span>⚡</span> Features &amp; Configuration</h2>
+                    
+                    <!-- Core Features Toggle -->
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="enableCoreFeatures" checked="">
+                        <label for="enableCoreFeatures">Enable Core Features (Recommended)</label>
+                    </div>
+                    
+                    <!-- Individual Feature Flags -->
+                    <div class="feature-list">
+                        <div class="feature-item">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="showCustomJavascript" checked="">
+                                <label for="showCustomJavascript">Show Custom JavaScript Field</label>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="enabledChannels" checked="">
+                                <label for="enabledChannels">Enable Channels</label>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="enableWrapUpAutomation" checked="">
+                                <label for="enableWrapUpAutomation">Enable Wrap-up Automation</label>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="controlOperatorSurveys" checked="">
+                                <label for="controlOperatorSurveys">Control Operator Surveys</label>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="controlCallVisualizer" checked="">
+                                <label for="controlCallVisualizer">Control Call Visualizer</label>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="enableConsolidation" checked="">
+                                <label for="enableConsolidation">Enable Consolidation</label>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="enableDirectInbound" checked="">
+                                <label for="enableDirectInbound">Enable Direct Inbound</label>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="reportingTabEnabled" checked="">
+                                <label for="reportingTabEnabled">Enable Reporting Tab</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Phone Channel Configuration -->
+                    <div class="checkbox-group" style="margin-top: 25px;">
+                        <input type="checkbox" id="enablePhoneChannel" checked="">
+                        <label for="enablePhoneChannel">Enable Phone Channel</label>
+                    </div>
+                    
+                    <div id="phoneConfig" class="phone-config">
+                        <h3>📞 Phone Channel Settings</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="maxPhoneNumbers">Maximum Phone Numbers</label>
+                                <input type="number" id="maxPhoneNumbers" value="10" min="1" max="50">
+                            </div>
+                            <div class="form-group">
+                                <div class="checkbox-group">
+                                    <input type="checkbox" id="showTabInAdvancedAdmin" checked="">
+                                    <label for="showTabInAdvancedAdmin">Show Phone Tab in Advanced Admin</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Environment -->
+                <div class="section">
+                    <h2><span>🔧</span> Environment</h2>
+                    <div class="form-group">
+                        <label for="environment">Target Environment *</label>
+                        <select id="environment" required="">
+                            <option value="beta" selected="">Beta (Testing)</option>
+                            <option value="production">Production</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="onboard-btn" id="onboardBtn">
+                    🚀 Preview Complete Configuration
+                </button>
+            </form>
+
+            <div id="output" class="demo-output" style="display: none;">
+                <h3>📋 Complete Configuration &amp; API Calls</h3>
+                <p>This shows exactly what would be sent to the Glia APIs:</p>
+                <pre id="configOutput"></pre>
+                
+                <h3>🔗 API Endpoints &amp; Feature Flags</h3>
+                <pre id="apiOutput"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let userCount = 1;
+
+        function addUser() {
+            userCount++;
+            const container = document.getElementById('usersContainer');
+            const userDiv = document.createElement('div');
+            userDiv.className = 'user-entry';
+            userDiv.innerHTML = `
+                <button type="button" class="remove-user-btn" onclick="removeUser(this)">Remove</button>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Email *</label>
+                        <input type="email" name="userEmail[]" required placeholder="user@acmecorp.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Role *</label>
+                        <select name="userRole[]" required>
+                            <option value="admin">Admin</option>
+                            <option value="agent" selected>Agent</option>
+                            <option value="supervisor">Supervisor</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>First Name *</label>
+                        <input type="text" name="userFirstName[]" required placeholder="Jane">
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name *</label>
+                        <input type="text" name="userLastName[]" required placeholder="Smith">
+                    </div>
+                </div>
+            `;
+            container.appendChild(userDiv);
+        }
+
+        function removeUser(button) {
+            if (userCount > 1) {
+                button.parentElement.remove();
+                userCount--;
+            }
+        }
+
+        // Toggle phone config visibility
+        document.getElementById('enablePhoneChannel').addEventListener('change', function() {
+            const phoneConfig = document.getElementById('phoneConfig');
+            phoneConfig.style.display = this.checked ? 'block' : 'none';
+        });
+
+        document.getElementById('onboardingForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Collect users
+            const users = [];
+            const emails = document.querySelectorAll('input[name="userEmail[]"]');
+            const roles = document.querySelectorAll('select[name="userRole[]"]');
+            const firstNames = document.querySelectorAll('input[name="userFirstName[]"]');
+            const lastNames = document.querySelectorAll('input[name="userLastName[]"]');
+            
+            for (let i = 0; i < emails.length; i++) {
+                users.push({
+                    email: emails[i].value,
+                    role: roles[i].value,
+                    first_name: firstNames[i].value,
+                    last_name: lastNames[i].value,
+                    permissions: roles[i].value === 'admin' ? ['manage_site', 'manage_users'] : ['handle_interactions']
+                });
+            }
+
+            // Collect form data
+            const config = {
+                account: {
+                    name: document.getElementById('accountName').value,
+                    type: document.getElementById('accountType').value,
+                    domain: document.getElementById('accountDomain').value
+                },
+                site: {
+                    name: document.getElementById('siteName').value,
+                    domain: document.getElementById('siteDomain').value,
+                    clone_from_id: document.getElementById('templateSiteId').value || null,
+                    settings: {
+                        timezone: document.getElementById('timezone').value,
+                        language: document.getElementById('language').value
+                    }
+                },
+                users: users,
+                features: {
+                    show_custom_javascript_field: document.getElementById('showCustomJavascript').checked,
+                    enabled_channels: document.getElementById('enabledChannels').checked,
+                    enable_wrap_up_automation: document.getElementById('enableWrapUpAutomation').checked,
+                    control_operator_surveys: document.getElementById('controlOperatorSurveys').checked,
+                    control_call_visualizer: document.getElementById('controlCallVisualizer').checked,
+                    enable_consolidation: document.getElementById('enableConsolidation').checked,
+                    enable_direct_inbound: document.getElementById('enableDirectInbound').checked,
+                    reporting_tab_enabled: document.getElementById('reportingTabEnabled').checked
+                },
+                enable_phone_channel: document.getElementById('enablePhoneChannel').checked,
+                max_phone_numbers: parseInt(document.getElementById('maxPhoneNumbers').value) || 10,
+                show_tab_in_advanced_admin: document.getElementById('showTabInAdvancedAdmin').checked,
+                enable_core_features: document.getElementById('enableCoreFeatures').checked,
+                environment: document.getElementById('environment').value
+            };
+
+            const environment = config.environment;
+            const baseUrl = environment === 'beta' ? 'https://api.beta.glia.com' : 'https://api.glia.com';
+            const adminUrl = environment === 'beta' ? 'https://admin.beta.glia.com' : 'https://admin.glia.com';
+
+            // Show the output
+            document.getElementById('output').style.display = 'block';
+            document.getElementById('configOutput').textContent = JSON.stringify(config, null, 2);
+            
+            const apiCalls = `COMPLETE GLIA ONBOARDING WORKFLOW
+================================
+
+1. CREATE ACCOUNT
+   POST ${adminUrl}/accounts/new
+   Body: ${JSON.stringify(config.account, null, 2)}
+
+2. CREATE SITE  
+   POST ${baseUrl}/sites
+   Body: ${JSON.stringify({...config.site, account_id: '[ACCOUNT_ID_FROM_STEP_1]'}, null, 2)}
+
+3. CREATE USERS (${users.length} users)
+${users.map((user, i) => `   User ${i+1}: POST ${baseUrl}/operators
+   Body: ${JSON.stringify({...user, site_id: '[SITE_ID_FROM_STEP_2]'}, null, 2)}`).join('\n\n')}
+
+4. ENABLE FEATURE FLAGS
+   PATCH ${adminUrl}/sites/[SITE_ID]/
+   Content-Type: application/x-www-form-urlencoded
+   
+   Feature Flags to Enable:
+   ${Object.entries(config.features).filter(([key, value]) => value).map(([key, value]) => `   ✅ ${key}: ${value}`).join('\n')}
+
+5. PHONE CHANNEL CONFIGURATION
+   ${config.enable_phone_channel ? `✅ ENABLED
+   - Max Phone Numbers: ${config.max_phone_numbers}
+   - Show Admin Tab: ${config.show_tab_in_advanced_admin}
+   
+   PATCH ${adminUrl}/sites/[SITE_ID]/
+   Body: site[settings][33450932-fdb1-4e70-bcb7-2de03d9b76e5][value]=${config.max_phone_numbers}&site[settings][c33714b3-dd91-42f4-8190-28cc573f8583][value]=enabled` : '❌ DISABLED'}
+
+AUTHENTICATION:
+All requests include: Authorization: Bearer [YOUR_GLIA_TOKEN]
+
+ENVIRONMENT: ${environment.toUpperCase()}
+API Base: ${baseUrl}
+Admin Base: ${adminUrl}`;
+            
+            document.getElementById('apiOutput').textContent = apiCalls;
+            
+            // Scroll to output
+            document.getElementById('output').scrollIntoView({ behavior: 'smooth' });
+        });
+    </script>
+
+
+</body></html>

@@ -40,9 +40,10 @@
                             <optgroup label="Available for use">
                                 <option value="client_offboarding">client_offboarding - Disable non super-managers</option>
                                 <option value="client_onboarding">client_onboarding - Enable the correct feature flags</option>
+                                <option value="fetch_details">fetch_details - Query user sites and accounts by email</option>
                             </optgroup>
                             <optgroup label="Coming soon">
-                                <option value="client_onboarding">client_onboarding - Onboard faster!</option>
+                                <option value="client_onboarding_v2">client_onboarding - Onboard faster!</option>
                                 <option value="site_cloning">site_cloning - Clone faster to production!</option>
                                 <option value="NA">Contact the MX CE team if you have another script idea!</option>
                             </optgroup>
@@ -54,14 +55,7 @@
                 </div>
 
                 <div id="dynamic-fields" class="form-group" style="margin-top: 15px; border-left: 3px solid #6c5ce7; padding-left: 10px; display: none;">
-                    </div>
-                
-                <!--
-                <div class="form-group">
-                    <label for="args">Arguments (optional)</label>
-                    <input type="text" id="args" name="args" placeholder="--verbose --dry-run">
                 </div>
-                -->
 
                 <div class="form-actions">
                     <button type="submit" class="btn btn-primary" id="run-btn" disabled>
@@ -79,12 +73,28 @@
                 <h2>Output</h2>
                 <div class="output-container">
                     <div class="output-header">
-                        <span class="output-status">Ready</span>
+                        <span class="output-status" id="output-status">Ready</span>
                         <button class="btn btn-small" id="clear-output">Clear</button>
                     </div>
                     <pre class="output-console" id="output">Waiting for script execution...
 
 Select a script and click "Run Script" to begin.</pre>
+                </div>
+
+                <!-- Results table (hidden by default, populated by fetch_details) -->
+                <div id="results-container" class="hidden" style="margin-top: 1.5rem;">
+                    <h2 style="font-size: 1rem; font-weight: 600; color: var(--gray-900); margin-bottom: 0.75rem;">User Sites & Accounts</h2>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Site Name</th>
+                                <th>Site ID</th>
+                                <th>Account ID</th>
+                                <th>Twilio Account ID</th>
+                            </tr>
+                        </thead>
+                        <tbody id="results-tbody"></tbody>
+                    </table>
                 </div>
             </section>
         </div>
@@ -136,5 +146,130 @@ Select a script and click "Run Script" to begin.</pre>
     <footer class="footer">
         <p>Internal Tools v1.0 · For authorized team members only</p>
     </footer>
+
+    <!-- Mock fetch_details logic (inline, no client-app.js changes) -->
+    <script>
+        (function () {
+            // TODO: Replace with the actual Redash query URL
+            const REDASH_QUERY_URL = "https://redash.example.com/queries/REPLACE_ME";
+
+            const scriptSelect = document.getElementById('script-select');
+            const confirmBtn = document.getElementById('confirm-btn');
+            const dynamicFields = document.getElementById('dynamic-fields');
+            const runBtn = document.getElementById('run-btn');
+            const form = document.getElementById('script-form');
+            const output = document.getElementById('output');
+            const outputStatus = document.getElementById('output-status');
+            const resultsContainer = document.getElementById('results-container');
+            const resultsTbody = document.getElementById('results-tbody');
+            const clearBtn = document.getElementById('clear-output');
+
+            function renderEmailField() {
+                dynamicFields.innerHTML = `
+                    <label for="user-email">User Email</label>
+                    <input type="email" id="user-email" name="user-email" required placeholder="user@example.com">
+                    <span class="form-hint">
+                        Email of the user to look up.
+                        <a href="${REDASH_QUERY_URL}" target="_blank" rel="noopener noreferrer"
+                           style="color: var(--primary); text-decoration: none;">
+                            Open in Redash ↗️
+                        </a>
+                    </span>
+                `;
+                dynamicFields.style.display = 'block';
+            }
+
+            function clearDynamicFields() {
+                dynamicFields.innerHTML = '';
+                dynamicFields.style.display = 'none';
+            }
+
+            // Confirm Selection: reveal email field if fetch_details, enable Run button
+            confirmBtn.addEventListener('click', function () {
+                const selected = scriptSelect.value;
+                if (!selected) return;
+
+                if (selected === 'fetch_details') {
+                    renderEmailField();
+                } else {
+                    clearDynamicFields();
+                }
+                runBtn.disabled = false;
+            });
+
+            // Intercept submit for fetch_details; let other scripts fall through to client-app.js
+            form.addEventListener('submit', function (e) {
+                if (scriptSelect.value !== 'fetch_details') return;
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                const emailInput = document.getElementById('user-email');
+                const email = emailInput ? emailInput.value.trim() : '';
+                if (!email) {
+                    outputStatus.textContent = 'Error';
+                    output.textContent = 'Error: email is required.';
+                    return;
+                }
+
+                outputStatus.textContent = 'Running...';
+                output.textContent = `Querying Redash for ${email}...`;
+
+                // Simulate network latency
+                setTimeout(() => {
+                    const results = mockFetchDetails(email);
+                    output.textContent = JSON.stringify(results, null, 2);
+                    outputStatus.textContent = 'Success';
+                    renderResultsTable(results);
+                }, 400);
+            });
+
+            function mockFetchDetails(email) {
+                const userId = crypto.randomUUID();
+                const siteNames = ['Testing Feature flag', 'Testing_hackathon', 'Ruy Prod Site 1'];
+                return siteNames.map(name => ({
+                    user_id: userId,
+                    user_email: email,
+                    user_enabled: true,
+                    site_id: crypto.randomUUID(),
+                    site_name: name,
+                    account_id: crypto.randomUUID(),
+                    twilio_account_id: crypto.randomUUID()
+                }));
+            }
+
+            function renderResultsTable(results) {
+                resultsTbody.innerHTML = results.map(r => `
+                    <tr>
+                        <td>${r.site_name}</td>
+                        <td><code>${r.site_id}</code></td>
+                        <td><code>${r.account_id}</code></td>
+                        <td><code>${r.twilio_account_id}</code></td>
+                    </tr>
+                `).join('');
+                resultsContainer.classList.remove('hidden');
+            }
+
+            // Reset handling
+            form.addEventListener('reset', function () {
+                clearDynamicFields();
+                runBtn.disabled = true;
+                output.textContent = 'Waiting for script execution...\n\nSelect a script and click "Run Script" to begin.';
+                outputStatus.textContent = 'Ready';
+                resultsContainer.classList.add('hidden');
+                resultsTbody.innerHTML = '';
+            });
+
+            // Clear output button
+            if (clearBtn) {
+                clearBtn.addEventListener('click', function () {
+                    output.textContent = '';
+                    outputStatus.textContent = 'Ready';
+                    resultsContainer.classList.add('hidden');
+                    resultsTbody.innerHTML = '';
+                });
+            }
+        })();
+    </script>
 </body>
 </html>
