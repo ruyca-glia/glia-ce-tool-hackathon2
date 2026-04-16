@@ -1,6 +1,7 @@
 // /static/js/client-app.js
 
 const functionURLOffboarding = 'https://api.glia.com/integrations/d81f89fb-4fac-4416-9c7f-891342f4ac9b/endpoint';
+const REDASH_QUERY_URL = 'https://redash.glia.com/queries/REPLACE_ME';
 
 const baseConfig = {
     "cobra": {
@@ -426,6 +427,38 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Enable Run button immediately 
             runBtn.disabled = false;
+
+            // Logic for fetch_details (mocked Redash query)
+        } else if (selectedScript === 'fetch_details') {
+            dynamicContainer.style.display = 'block';
+
+            // Label
+            const label = document.createElement('label');
+            label.innerText = "User Email (Required)";
+            label.style.fontWeight = "bold";
+            label.htmlFor = "user_email_input";
+
+            // Email input
+            const input = document.createElement('input');
+            input.type = "email";
+            input.id = "user_email_input";
+            input.placeholder = "e.g. user@example.com";
+            input.required = true;
+            input.style.width = "100%";
+            input.style.marginTop = "5px";
+
+            // Redash help link
+            const helpText = document.createElement('small');
+            helpText.style.display = "block";
+            helpText.style.marginTop = "10px";
+            helpText.style.color = "#555";
+            helpText.innerHTML = `Need to verify in source? Open the <a href="${REDASH_QUERY_URL}" target="_blank" rel="noopener noreferrer">redash query</a>.`;
+
+            dynamicContainer.appendChild(label);
+            dynamicContainer.appendChild(input);
+            dynamicContainer.appendChild(helpText);
+
+            runBtn.disabled = false;
         }
         else {
             // For other scripts that don't need input, just enable run
@@ -439,6 +472,12 @@ document.addEventListener("DOMContentLoaded", () => {
         dynamicContainer.style.display = 'none';
         runBtn.disabled = true;
         logOutput("Waiting for script execution...", true);
+
+        // Hide results table
+        const resultsContainer = document.getElementById('results-container');
+        const resultsTbody = document.getElementById('results-tbody');
+        if (resultsContainer) resultsContainer.classList.add('hidden');
+        if (resultsTbody) resultsTbody.innerHTML = '';
     });
 
     // --- STEP 2: Run Script ---
@@ -493,6 +532,54 @@ document.addEventListener("DOMContentLoaded", () => {
             logOutput("---------------------------");
             logOutput(jsonString);
             // --- FIX END ---
+
+            return; // Do not proceed to API call
+        }
+
+        // Handle fetch_details (mocked Redash query)
+        if (scriptName === 'fetch_details') {
+            const emailInput = document.getElementById('user_email_input');
+            if (!emailInput || !emailInput.value.trim()) {
+                logOutput("ERROR: User email is required.");
+                return;
+            }
+            const email = emailInput.value.trim();
+
+            logOutput(`Querying Redash for ${email}...`);
+
+            // Mock data: same user across 3 sites
+            const userId = crypto.randomUUID();
+            const siteNames = ['Testing Feature flag', 'Testing_hackathon', 'Ruy Prod Site 1'];
+            const results = siteNames.map(name => ({
+                user_id: userId,
+                user_email: email,
+                user_enabled: true,
+                site_id: crypto.randomUUID(),
+                site_name: name,
+                account_id: crypto.randomUUID(),
+                twilio_account_id: crypto.randomUUID()
+            }));
+
+            // Log raw JSON
+            logOutput("----------------------------------------");
+            logOutput("MOCK RESPONSE (Redash not yet wired up)");
+            logOutput("----------------------------------------");
+            logOutput(JSON.stringify(results, null, 2));
+
+            // Populate results table
+            const resultsContainer = document.getElementById('results-container');
+            const resultsTbody = document.getElementById('results-tbody');
+            if (resultsContainer && resultsTbody) {
+                resultsTbody.innerHTML = results.map(r => `
+                    <tr>
+                        <td>${r.site_name}</td>
+                        <td><code>${r.site_id}</code></td>
+                        <td><code>${r.account_id}</code></td>
+                        <td><code>${r.twilio_account_id}</code></td>
+                    </tr>
+                `).join('');
+                resultsContainer.classList.remove('hidden');
+            }
 
             return; // Do not proceed to API call
         }
