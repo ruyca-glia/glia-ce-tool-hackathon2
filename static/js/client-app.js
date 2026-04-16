@@ -1,7 +1,7 @@
 // /static/js/client-app.js
 
 const functionURLOffboarding = 'https://api.glia.com/integrations/d81f89fb-4fac-4416-9c7f-891342f4ac9b/endpoint';
-const REDASH_QUERY_URL = 'https://redash.glia.com/queries/REPLACE_ME';
+const REDASH_QUERY_URL = 'https://redash.glia.com/queries/2994/';
 
 const baseConfig = {
     "cobra": {
