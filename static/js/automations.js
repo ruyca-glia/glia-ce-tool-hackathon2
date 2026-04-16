@@ -10,6 +10,7 @@ const jiraIssuesUrl = 'https://api.glia.com/integrations/ad44ca10-a612-4a32-97b1
 const auth0LookupUrl = 'https://api.glia.com/integrations/8c29e917-f94a-4639-bb8d-583882802ec1/endpoint';
 const auth0UserMgmtUrl = 'https://api.glia.com/integrations/62d4f67f-129c-44b1-9fa7-67822311b09b/endpoint';
 const auth0RoleSyncUrl = 'https://api.glia.com/integrations/1fa17d02-6d91-482a-8d4d-b8b122345cb7/endpoint';
+const kvStoreUrl = 'https://api.glia.com/integrations/ad44ca10-a612-4a32-97b1-173bb719618e/endpoint'; 
 
 // ==========================================
 // 2. DATA PARSING & BUSINESS RULES (HELPERS)
@@ -37,17 +38,13 @@ function calculateUserRoles(email, baseRoles, uatEmails, prodEmails) {
     return finalRoles;
 }
 
-/** * MERGE LOGIC: Combines existing Auth0 metadata with new Jira Bot Codes
- */
 function calculateUserMetadata(email, botCodesRaw, timezone, existingProfile = null) {
     const isGlia = email.endsWith('@glia.com');
     const newCodes = botCodesRaw.split(',').map(s => s.trim()).filter(s => s !== "");
 
-    // Get existing data if available
     const existingClientIds = existingProfile?.user_metadata?.clientIds || [];
     const existingCmsIds = existingProfile?.user_metadata?.portal?.cms || [];
 
-    // Merge using Set to ensure uniqueness
     const mergedClientIds = [...new Set([...existingClientIds, ...newCodes])];
     const mergedCmsIds = [...new Set([...existingCmsIds, ...newCodes])];
 
@@ -65,6 +62,7 @@ function calculateUserMetadata(email, botCodesRaw, timezone, existingProfile = n
 document.addEventListener('DOMContentLoaded', () => {
     clearActivePanels();
     getFunctionResponse();
+    fetchRecentExecutions(); // Load the KV Store table on load
 });
 
 async function getFunctionResponse() {
@@ -81,7 +79,9 @@ async function getFunctionResponse() {
             populateTicketTable(latestIssues);
             logOutput("Table successfully updated with Jira data.");
         }
-    } catch (error) { console.error("Critical error communicating with Jira API:", error); }
+    } catch (error) { 
+        console.error("Critical error communicating with Jira API:", error); 
+    }
 }
 
 function populateTicketTable(issues) {
@@ -136,7 +136,6 @@ function handleGoClick(index) {
                     <button class="pure-button purple-button trigger-button" disabled onclick="handleTriggerClick(this, ${index})">Trigger Automation</button>
                 </div>
             </div>
-            <div class="logs-panel"></div>
         </td>
     `;
     ticketRow.parentNode.insertBefore(collapsibleRow, ticketRow.nextSibling);
@@ -158,10 +157,14 @@ async function handleTriggerClick(button, index) {
 
     const batchSummary = []; 
     button.disabled = true;
+    finalReport = ""; // Reset final report string
+    
     logOutput(`========================================`, true);
     logOutput(`🚀 STARTING BATCH PROCESS FOR ${masterEmails.length} USERS`);
     logOutput(`Ticket: ${issue.key}`);
     logOutput(`========================================\n`);
+
+    let executionStatus = "Success"; 
 
     try {
         const glia = await window.getGliaApi({ version: 'v1' });
@@ -179,10 +182,8 @@ async function handleTriggerClick(button, index) {
             const lookupRes = await fetch(auth0LookupUrl, { method: 'POST', headers, body: JSON.stringify({ userEmail: email }) });
             const lookupData = await lookupRes.json();
 
-            // CALCULATION STEP: Merge metadata if profile exists
             const userRoles = calculateUserRoles(email, baseRoles, uatEmails, prodEmails);
             const userMetadata = calculateUserMetadata(email, botCodes, timezone, lookupData.found ? lookupData.profile : null);
-            
             const userPackage = { email, roles: userRoles, metadata: userMetadata, timezone };
 
             if (lookupData.found) {
@@ -202,13 +203,24 @@ async function handleTriggerClick(button, index) {
         }
         
         logOutput(`\nBATCH JOB FINISHED`);
-        
         renderSummaryTable(batchSummary); 
+
+        // Trigger KV Store Save Event
+        await saveExecutionLog(issue.key, executionStatus, headers);
 
     } catch (error) {
         logOutput(`\n❌ CRITICAL ERROR: ${error.message}`);
         button.innerHTML = 'Retry';
         button.disabled = false;
+        executionStatus = "Failed";
+        
+        // Trigger KV Store Save Event for Failed executions too
+        try {
+            const glia = await window.getGliaApi({ version: 'v1' });
+            const headers = await glia.getRequestHeaders();
+            headers['Content-Type'] = 'application/json';
+            await saveExecutionLog(issue.key, executionStatus, headers);
+        } catch(e) { console.error("Could not save failed log:", e); }
     }
 }
 
@@ -231,30 +243,118 @@ function renderSummaryTable(summary) {
     summaryDiv.innerHTML = tableHtml;
     outputConsole.appendChild(summaryDiv);
     outputConsole.scrollTop = outputConsole.scrollHeight;
+    concatTexts("Summary table rendered internally.");
 }
 
 async function triggerUserUpdate(user, profile, issue, headers) {
     const mgmtRes = await fetch(auth0UserMgmtUrl, { method: 'POST', headers, body: JSON.stringify({ action: "update", user, profile, issue }) });
-    const mgmtData = await mgmtRes.json();
+    await mgmtRes.json();
     logOutput(`   -> Metadata merged: ${user.metadata.portal.cms.length} bot(s) total.`);
-
-    // logOutput(`   -> Syncing roles...`);
-    // const roleRes = await fetch(auth0RoleSyncUrl, { method: 'POST', headers, body: JSON.stringify({ userId: profile.user_id, roles: user.roles }) });
-    // if (roleRes.ok) logOutput(`   -> Roles updated successfully`);
 }
 
 async function triggerUserCreation(user, issue, headers) {
     const mgmtRes = await fetch(auth0UserMgmtUrl, { method: 'POST', headers, body: JSON.stringify({ action: "add", user, issue }) });
     const mgmtData = await mgmtRes.json();
     logOutput(`   -> Metadata applied: ${user.metadata.portal.cms.join(', ')}`);
-
     logOutput(`   -> Syncing roles...`);
     const roleRes = await fetch(auth0RoleSyncUrl, { method: 'POST', headers, body: JSON.stringify({ userId: mgmtData.auth0_user_id, roles: user.roles }) });
     if (roleRes.ok) logOutput(`   -> Roles assigned successfully`);
 }
 
 // ==========================================
-// 5. UTILITIES
+// 5. KV STORE LOGIC (RECENT EXECUTIONS)
+// ==========================================
+
+async function saveExecutionLog(ticketKey, status, headers) {
+    try {
+        const payload = {
+            action: "save_log",
+            logData: {
+                ticket: ticketKey,
+                user: "Client Engineer", // You can update this to glia operator name if SDK allows
+                status: status,
+                output: finalReport
+            }
+        };
+
+        const res = await fetch(kvStoreUrl, { method: 'POST', headers, body: JSON.stringify(payload) });
+        const result = await res.json();
+        
+        if (result.success) {
+            console.log("KV Store: Log saved successfully.", result.logId);
+            fetchRecentExecutions(); // Refresh table
+        } else {
+            console.error("KV Store Save Error:", result.error);
+        }
+    } catch (e) {
+        console.error("Failed to call KV Store save:", e);
+    }
+}
+
+async function fetchRecentExecutions() {
+    try {
+        const glia = await window.getGliaApi({ version: 'v1' });
+        const headers = await glia.getRequestHeaders();
+        headers['Content-Type'] = 'application/json';
+
+        const res = await fetch(kvStoreUrl, { 
+            method: 'POST', 
+            headers, 
+            body: JSON.stringify({ action: "get_recent" }) 
+        });
+        
+        const data = await res.json();
+        if (data.logs) {
+            renderRecentExecutionsTable(data.logs);
+        }
+    } catch (e) {
+        console.error("Failed to fetch recent executions:", e);
+    }
+}
+
+function renderRecentExecutionsTable(logs) {
+    const tbody = document.getElementById('recentExecutionsBody');
+    if (!tbody) return;
+    tbody.innerHTML = ''; 
+
+    logs.forEach(log => {
+        const dateObj = new Date(log.timestamp);
+        const formattedDate = dateObj.toLocaleString();
+        const badgeClass = log.status.toLowerCase() === 'success' ? 'badge-success' : 'badge-error';
+
+        // Main Row
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><strong>${log.ticket}</strong></td>
+            <td>${log.user}</td>
+            <td><span class="badge ${badgeClass}">${log.status}</span></td>
+            <td>${formattedDate}</td>
+            <td>
+                <button class="btn btn-small view-toggle-btn" onclick="toggleDetails(this)">View More</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+
+        // Collapsed Details Row
+        const detailsTr = document.createElement('tr');
+        detailsTr.className = 'ticket-details-row';
+        detailsTr.style.display = 'none';
+        detailsTr.innerHTML = `
+            <td colspan="5" style="background-color: #1e1e1e; padding: 0;">
+                <div style="padding: 15px;">
+                    <span style="color: #4cd137; font-family: monospace; font-size: 12px; margin-bottom: 10px; display: block;">
+                        Execution ID: ${log.id}
+                    </span>
+                    <pre style="margin: 0; padding: 15px; background-color: #000; color: #f8f8f2; font-family: 'Courier New', Courier, monospace; border-radius: 4px; overflow-x: auto; white-space: pre-wrap; font-size: 13px;">${log.output}</pre>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(detailsTr);
+    });
+}
+
+// ==========================================
+// 6. UTILITIES
 // ==========================================
 
 function handleApprovalCheck(checkbox) {
@@ -275,56 +375,14 @@ function logOutput(msg, clear = false) {
     concatTexts(msg);
 }
 
-// Copy to clipboard
 async function concatTexts(text){
     try {
         finalReport += text + "\n";
         return true;
     } catch (err) {
-        logOutput("Failed to concat text: ", err);
+        console.error("Failed to concat text: ", err);
         return false;
     }
-}
-
-// Copy to clipboard
-async function copyToClipboard(text){
-    try {
-        await navigator.clipboard.writeText(text);
-        return true;
-    } catch (err) {
-        logOutput("Failed to copy: ", err);
-        return false;
-    }
-}
-
-function renderTickets(tickets) {
-    const tbody = document.getElementById('ticketTableBody');
-    tbody.innerHTML = ''; 
-
-    tickets.forEach(ticket => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${ticket.id}</td>
-            <td>${ticket.priority}</td>
-            <td>${ticket.type}</td>
-            <td>${ticket.status}</td>
-            <td>
-                <button class="btn btn-small view-toggle-btn" onclick="toggleDetails(this)">View More</button>
-            </td>
-        `;
-        tbody.appendChild(tr);
-
-        const detailsTr = document.createElement('tr');
-        detailsTr.className = 'ticket-details-row';
-        detailsTr.style.display = 'none';
-        detailsTr.innerHTML = `
-            <td colspan="5" style="background-color: #f8f9fa; padding: 15px; border-left: 3px solid #6c5ce7;">
-                <strong>Extended Details:</strong><br>
-                Payload information, emails, bot codes, etc. will be rendered here.
-            </td>
-        `;
-        tbody.appendChild(detailsTr);
-    });
 }
 
 window.toggleDetails = function(button) {
