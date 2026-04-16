@@ -69,7 +69,6 @@ async function getFunctionResponse() {
     logOutput("Starting Glia API call to fetch Jira tickets...", true);
     try {
         const glia = await window.getGliaApi({ version: 'v1' });
-        const currentUser = glia.getUser();
         const headers = await glia.getRequestHeaders();
         headers['Content-Type'] = 'application/json';
 
@@ -267,6 +266,13 @@ async function triggerUserCreation(user, issue, headers) {
 // ==========================================
 
 async function saveExecutionLog(ticketKey, status, headers) {
+    const glia = await window.getGliaApi({ version: 'v1' });
+    const currentUser = glia.then(async api => {
+    await api.getUser()
+      .then(data => console.log(data))
+      .catch(error => console.error(error));
+  });
+
     try {
         const payload = {
             action: "save_log",
