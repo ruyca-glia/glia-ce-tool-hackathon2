@@ -266,19 +266,29 @@ async function triggerUserCreation(user, issue, headers) {
 // ==========================================
 
 async function saveExecutionLog(ticketKey, status, headers) {
-    const glia = await window.getGliaApi({ version: 'v1' });
-    const currentUser = glia.then(async api => {
-    await api.getUser()
-      .then(data => console.log(data))
-      .catch(error => console.error(error));
-  });
+    let operatorName = "Client Engineer"; // Fallback name
 
+    // 1. Get the current Glia Operator
+    try {
+        const gliaApi = await window.getGliaApi({ version: 'v1' });
+        const operatorData = await gliaApi.getUser();
+        
+        // Assuming the SDK returns an object with a 'name' attribute.
+        // Adjust '.name' if the Glia SDK returns it as '.firstName', '.displayName', etc.
+        if (operatorData && operatorData.name) {
+            operatorName = operatorData.name;
+        }
+    } catch (error) {
+        console.warn("Could not retrieve Glia Operator info. Defaulting to fallback.", error);
+    }
+
+    // 2. Save to KV Store
     try {
         const payload = {
             action: "save_log",
             logData: {
                 ticket: ticketKey,
-                user: currentUser, // You can update this to glia operator name if SDK allows
+                user: operatorName, // Dynamic user injected here
                 status: status,
                 output: finalReport
             }
@@ -289,7 +299,7 @@ async function saveExecutionLog(ticketKey, status, headers) {
         
         if (result.success) {
             console.log("KV Store: Log saved successfully.", result.logId);
-            fetchRecentExecutions(); // Refresh table
+            fetchRecentExecutions(); 
         } else {
             console.error("KV Store Save Error:", result.error);
         }
